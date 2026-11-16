@@ -1,0 +1,2074 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backpack Runner - Backpack</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Galindo&family=Geologica:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Geologica', sans-serif;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #bp-runner-card {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      background: linear-gradient(160deg, #51e5ff 0%, #a6f0ff 52%, #fffbf9 100%);
+      border-radius: 26px;
+      border: 4px solid #ffffff;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .runner-hud {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      z-index: 15;
+    }
+
+    .hud-pill {
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 50px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      border: 2px solid #ffffff;
+    }
+
+    .hud-title-badge {
+      font-family: 'Galindo', cursive;
+      color: #f25278;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hud-title-badge img {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+    }
+
+    .hud-stat {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.05;
+    }
+
+    .hud-lbl {
+      font-family: 'Galindo', cursive;
+      font-size: 0.65rem;
+      color: #f25278;
+      text-transform: uppercase;
+    }
+
+    .hud-val {
+      font-family: 'Galindo', cursive;
+      font-size: 1.1rem;
+      color: #0277bd;
+    }
+
+    .powers-pill {
+      flex-grow: 1;
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 20px;
+      padding: 6px 14px;
+      border: 2px solid #51e5ff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #333;
+      min-height: 54px;
+      max-width: 480px;
+    }
+
+    .powers-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .powers-badges-slot {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      min-height: 20px;
+    }
+
+    .power-legend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.68rem;
+      color: #666;
+    }
+
+    .hud-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-icon-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      background: #ffffff;
+      color: #f25278;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.15s ease;
+    }
+
+    .btn-icon-circle:hover {
+      transform: scale(1.08);
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 3px solid #ffffff;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+      background: #E8DFD8;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .mobile-controls {
+      position: absolute;
+      inset-inline: 14px;
+      bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 12;
+    }
+
+    .mobile-btn {
+      pointer-events: auto;
+      font-family: 'Galindo', cursive;
+      font-size: 0.85rem;
+      padding: 10px 18px;
+      border-radius: 50px;
+      border: 3px solid #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+    }
+
+    .mobile-btn-duck {
+      background: #f25278;
+      color: #ffffff;
+    }
+
+    .mobile-btn-jump {
+      background: #ffc107;
+      color: #222222;
+    }
+
+    @media (min-width: 640px) {
+      .mobile-controls {
+        display: none !important;
+      }
+    }
+
+    .overlay-screen {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 251, 249, 0.94);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      z-index: 25;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .overlay-card {
+      background: #ffffff;
+      border: 3px solid #51e5ff;
+      border-radius: 26px;
+      padding: 22px 26px;
+      max-width: 490px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .overlay-card.gameover-border {
+      border-color: #ff758c;
+    }
+
+    .ov-title {
+      font-family: 'Galindo', cursive;
+      color: #f25278;
+      font-size: clamp(1.4rem, 3vw, 1.9rem);
+      margin-bottom: 4px;
+    }
+
+    .ov-subtitle {
+      font-family: 'Galindo', cursive;
+      color: #ffaa3b;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+
+    .ov-desc {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #555555;
+      margin-bottom: 12px;
+      line-height: 1.35;
+    }
+
+    .controls-box {
+      background: #f4fbff;
+      border: 2px dashed #51e5ff;
+      border-radius: 16px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      font-size: 0.76rem;
+      color: #333;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .kbd-pill {
+      background: #ffffff;
+      border: 1px solid #cceeff;
+      border-radius: 8px;
+      padding: 1px 6px;
+      font-weight: 800;
+      color: #0277bd;
+    }
+
+    .btn-bp-play {
+      width: 100%;
+      font-family: 'Galindo', cursive;
+      background: #ff758c;
+      color: #ffffff;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 26px;
+      font-size: 1.15rem;
+      box-shadow: 0 5px 0 #d63056;
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-bp-play:hover {
+      background: #ff5271;
+      transform: translateY(-2px);
+    }
+
+    .btn-bp-play:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #d63056;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: #fff8f0;
+      border: 2px solid #ffe0b2;
+      border-radius: 16px;
+      padding: 8px 6px;
+    }
+
+    .stat-box span {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: #777;
+      text-transform: uppercase;
+    }
+
+    .stat-box strong {
+      font-family: 'Galindo', cursive;
+      font-size: 1.35rem;
+      color: #0277bd;
+    }
+
+    .runner-footer-bar {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50px;
+      padding: 6px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #555;
+      gap: 8px;
+    }
+
+    .badge-power {
+      background: #51e5ff;
+      color: #024973;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 0.7rem;
+    }
+    .badge-power-gold {
+      background: #ffc107;
+      color: #333;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 0.7rem;
+    }
+    .badge-power-purple {
+      background: #D868EC;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 0.7rem;
+    }
+
+    @media (max-width: 820px) {
+      .power-legend {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER ESTILO PÍLDORA -->
+  <header class="custom-header">
+    <div class="container">
+      <nav class="navbar navbar-expand-lg navbar-pill">
+        <div class="container-fluid align-items-center px-2">
+          
+          <a class="navbar-brand me-0 me-lg-4 d-flex align-items-center" href="Inicio.html">
+            <img src="imagenes/logo final 1.png" alt="Logo Mochila" class="header-logo">
+          </a>
+
+          <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse align-items-center" id="navbarContent">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-2 gap-lg-4 text-center align-items-center">
+              <li class="nav-item">
+                <a class="nav-link nav-custom-link" href="Inicio.html">Inicio</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link nav-custom-link" href="Animaciones.html">Animaciones</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link nav-custom-link nav-active-yellow" href="index_juego.html">Juego</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link nav-custom-link" href="Merch.html">Merch</a>
+              </li>
+            </ul>
+
+            <div class="d-flex justify-content-center justify-content-lg-end align-items-center mt-2 mt-lg-0">
+              <button class="btn btn-login" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">
+                Iniciar sesión
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="container my-4">
+    
+    <h1 class="game-section-title mb-3">BACKPACK - Patio de juegos</h1>
+
+    <!-- CONTENEDOR DEL MINIJUEGO: BACKPACK RUNNER -->
+    <div class="game-card-wrapper p-3 p-md-4 mb-4">
+      <div id="bp-runner-card">
+        
+        <!-- Barra Superior HUD Estilo Píldora -->
+        <div class="runner-hud">
+          <div class="hud-pill">
+            <div class="hud-title-badge">
+              <img src="assets/backpack.png" alt="Backpack Logo" onerror="this.style.display='none'">
+              <span>Backpack Runner</span>
+            </div>
+            <div class="hud-stat">
+              <span class="hud-lbl">Puntos</span>
+              <span class="hud-val" id="hud-score">0</span>
+            </div>
+            <div class="hud-stat">
+              <span class="hud-lbl">Récord</span>
+              <span class="hud-val" id="hud-highscore">0</span>
+            </div>
+          </div>
+
+          <!-- Barra de Poderes Activos de 2 Líneas Fijas -->
+          <div class="powers-pill">
+            <div class="powers-top-row">
+              <span style="color: #0277bd; font-weight: 800;">Buffos Activos:</span>
+              <div class="power-legend">
+                <span>✏️+100</span>
+                <span>🛡️Escudo</span>
+                <span>⭐Invencible</span>
+                <span>⏰Slow</span>
+                <span>🧲Imán</span>
+                <span>💊x2</span>
+              </div>
+            </div>
+            <div id="active-powers-container" class="powers-badges-slot">
+              <span style="color: #888; font-style: italic; font-size: 0.72rem;">Ninguno activo</span>
+            </div>
+          </div>
+
+          <!-- Botón de Silenciar -->
+          <div class="hud-actions">
+            <button id="mute-btn" class="btn-icon-circle" title="Activar / Silenciar sonido">
+              <i id="mute-icon" class="bi bi-volume-up-fill"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Área del Canvas con el Pasillo de la Escuela -->
+        <div class="canvas-wrapper">
+          <canvas id="gameCanvas"></canvas>
+
+          <!-- Controles Táctiles en Móvil -->
+          <div id="mobile-controls" class="mobile-controls hidden">
+            <button id="mobile-duck-btn" class="mobile-btn mobile-btn-duck">⬇️ Agacharse (+Rápido)</button>
+            <button id="mobile-jump-btn" class="mobile-btn mobile-btn-jump">⬆️ Saltar</button>
+          </div>
+
+          <!-- Pantalla de Inicio -->
+          <div id="start-screen" class="overlay-screen">
+            <div class="overlay-card">
+              <div class="ov-title">¡Comienza la Aventura!</div>
+              <div class="ov-subtitle">Pasillo Escolar Backpack</div>
+              <p class="ov-desc">
+                Esquiva los <strong>Virus 🦠👾</strong> y <strong>Críticas 💬</strong> con aura roja. Recoge buffos para romper el récord.
+              </p>
+              
+              <div class="controls-box">
+                <div>⬆️ <strong>Saltar:</strong> <span class="kbd-pill">Espacio</span> / <span class="kbd-pill">↑</span></div>
+                <div>⬇️ <strong>Agacharse (+Velocidad):</strong> <span class="kbd-pill">↓</span> / <span class="kbd-pill">S</span></div>
+              </div>
+
+              <button id="start-btn" class="btn-bp-play">
+                <i class="bi bi-play-fill"></i> ¡JUGAR AHORA!
+              </button>
+            </div>
+          </div>
+
+          <!-- Pantalla de Game Over -->
+          <div id="gameover-screen" class="overlay-screen hidden">
+            <div class="overlay-card gameover-border">
+              <div class="ov-title">¡FIN DEL JUEGO!</div>
+              <div id="gameover-tip" class="ov-subtitle">¡Cada intento te hace más sabio!</div>
+
+              <div class="stats-row">
+                <div class="stat-box">
+                  <span>Puntaje</span>
+                  <strong id="final-score">0</strong>
+                </div>
+                <div class="stat-box">
+                  <span>Esquivados</span>
+                  <strong id="final-dodged">0</strong>
+                </div>
+                <div class="stat-box">
+                  <span>Récord</span>
+                  <strong id="final-highscore">0</strong>
+                </div>
+              </div>
+
+              <button id="restart-btn" class="btn-bp-play">
+                <i class="bi bi-arrow-clockwise"></i> REINTENTAR
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra Inferior Informativa -->
+        <div class="runner-footer-bar">
+          <div>
+            <strong style="color: #f25278;">Controles:</strong>
+            <span><strong>Espacio / ↑:</strong> Saltar &nbsp;•&nbsp; <strong>↓ / S:</strong> Agacharse (+Velocidad)</span>
+          </div>
+          <div style="color: #0277bd; font-weight: 700;">Backpack © 2026</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECCIÓN DE CONTROLES E INFORMACIÓN -->
+    <div class="row text-white mt-4 align-items-center">
+      <div class="col-12 col-md-5 col-lg-4 mb-4 mb-md-0">
+        <h3 class="info-subtitle mb-3">Controles</h3>
+        <div class="d-flex align-items-center justify-content-start">
+          <svg class="controls-illustration" viewBox="0 0 310 110" xmlns="http://www.w3.org/2000/svg">
+            <rect x="5" y="10" width="210" height="90" rx="10" fill="#ffffff" stroke="#2b2d42" stroke-width="3"/>
+            <rect x="15" y="18" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="33" y="18" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="51" y="18" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="69" y="18" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="87" y="18" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="105" y="18" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="123" y="18" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="141" y="18" width="35" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+
+            <rect x="15" y="32" width="18" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="37" y="32" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="55" y="32" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="73" y="32" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="91" y="32" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="109" y="32" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="127" y="32" width="49" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+
+            <rect x="15" y="58" width="82" height="24" rx="5" fill="#2ecc71" stroke="#2b2d42" stroke-width="2"/>
+            <text x="56" y="74" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">SALTAR (↑)</text>
+
+            <rect x="108" y="58" width="82" height="24" rx="5" fill="#ff5271" stroke="#2b2d42" stroke-width="2"/>
+            <text x="149" y="74" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">AGACHAR (↓)</text>
+
+            <rect x="235" y="18" width="45" height="74" rx="22" fill="#ffffff" stroke="#2b2d42" stroke-width="3"/>
+            <line x1="257.5" y1="18" x2="257.5" y2="48" stroke="#2b2d42" stroke-width="2"/>
+            <rect x="253" y="25" width="9" height="15" rx="4" fill="#aa00ff" stroke="#2b2d42" stroke-width="1.2"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-7 col-lg-8">
+        <h3 class="info-subtitle mb-2">Acerca de: Backpack Runner</h3>
+        <p class="info-description">
+          ¡Corre sin parar por los pasillos escolares de Backpack[cite: 9]! Esquiva los virus y las críticas con agilidad, salta los obstáculos y recoge útiles escolares con superpoderes especiales para alcanzar la puntuación máxima. ¡Demuestra qué tan ágil eres en esta divertida aventura digital!
+        </p>
+      </div>
+    </div>
+
+    <!-- SECCIÓN DE COMENTARIOS COMPLETA -->
+    <section class="comments-section mt-5">
+      <h2 class="comments-title mb-3">COMENTA</h2>
+      <div class="mb-4">
+        <textarea class="form-control comment-input" rows="4" placeholder="Califícanos"></textarea>
+      </div>
+      <div class="d-flex flex-column gap-3">
+        <div class="comment-card d-flex align-items-center p-3 p-md-4">
+          <img src="imagenes/perfil.png" alt="Perfil" class="comment-avatar me-3 me-md-4">
+          <div>
+            <h5 class="comment-username mb-1">User_Name</h5>
+            <p class="comment-text mb-0">¡Súper adictivo Backpack Runner, me encanta romper mi récord!</p>
+          </div>
+        </div>
+        <div class="comment-card d-flex align-items-center p-3 p-md-4">
+          <img src="imagenes/perfil.png" alt="Perfil" class="comment-avatar me-3 me-md-4">
+          <div>
+            <h5 class="comment-username mb-1">User_Name</h5>
+            <p class="comment-text mb-0">¿Cómo hago para poder cambiarle la ropa a mi personaje? Tengo a bry</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERIE ANIMADA COMPLETA -->
+    <section class="series-section my-5">
+      <h2 class="series-title mb-4">Serie animada</h2>
+      <div class="row g-4">
+        <div class="col-12 col-md-6">
+          <div class="episode-card position-relative p-3 p-md-4 h-100 overflow-hidden">
+            <div class="card-default-content">
+              <div class="thumbnail-wrapper mb-3">
+                <img src="imagenes/miniatura.png" alt="E1 - Patio de juegos" class="episode-thumbnail">
+                <span class="badge-duration">3min</span>
+              </div>
+              <span class="episode-brand d-block mb-1">BACKPACK</span>
+              <h4 class="episode-title mb-1">E1 - Patio de juegos</h4>
+              <span class="episode-subtitle d-block">Sub Español (America Latina)</span>
+            </div>
+
+            <div class="card-hover-overlay p-4 d-flex flex-column justify-content-between">
+              <div>
+                <span class="episode-brand d-block mb-1">BACKPACK</span>
+                <h4 class="episode-title mb-3">E1 - Patio de juegos</h4>
+                <p class="episode-description">
+                  Cuando un grupo de cinco amigos encuentra una vieja mochila abandonada en el patio del colegio...
+                </p>
+              </div>
+              <div>
+                <div class="episode-date d-flex align-items-center mb-3">
+                  <svg class="me-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <span>25/10/2026</span>
+                </div>
+                <a href="index_ver_capitulos.html" class="btn-play-now d-inline-flex align-items-center text-decoration-none">
+                  <svg class="me-2" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                  <span>Reproducir ahora</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="episode-card position-relative p-3 p-md-4 h-100 overflow-hidden">
+            <div class="card-default-content">
+              <div class="thumbnail-wrapper mb-3">
+                <img src="imagenes/miniatura.png" alt="E2" class="episode-thumbnail">
+                <span class="badge-duration">3min</span>
+              </div>
+              <span class="episode-brand d-block mb-1">BACKPACK</span>
+              <h4 class="episode-title mb-1">E2 - Título de la animación</h4>
+              <span class="episode-subtitle d-block">Sub Español (America Latina)</span>
+            </div>
+
+            <div class="card-hover-overlay p-4 d-flex flex-column justify-content-between">
+              <div>
+                <span class="episode-brand d-block mb-1">BACKPACK</span>
+                <h4 class="episode-title mb-3">E2 - Título de la animación</h4>
+                <p class="episode-description">
+                  Acompaña al grupo a descubrir los secretos ocultos dentro de la mochila y cómo aprenderán a usar la tecnología a su favor.
+                </p>
+              </div>
+              <div>
+                <div class="episode-date d-flex align-items-center mb-3">
+                  <svg class="me-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <span>25/10/2026</span>
+                </div>
+                <a href="index_ver_capitulos.html" class="btn-play-now d-inline-flex align-items-center text-decoration-none">
+                  <svg class="me-2" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                  <span>Reproducir ahora</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="custom-footer w-100 py-5 text-center">
+    <div class="container d-flex flex-column align-items-center">
+      <ul class="list-inline mb-4 footer-links d-flex flex-wrap justify-content-center gap-3 gap-md-4">
+        <li class="list-inline-item"><a href="#" class="footer-link">Términos y condiciones</a></li>
+        <li class="list-inline-item"><a href="#" class="footer-link">Política de privacidad</a></li>
+        <li class="list-inline-item"><a href="#" class="footer-link">Subtitulado</a></li>
+        <li class="list-inline-item"><a href="#" class="footer-link">Cumplimiento de derechos de autor</a></li>
+      </ul>
+      <div class="footer-logo-wrapper mb-4">
+        <img src="imagenes/logo final 1.png" alt="Backpack Logo" class="footer-logo">
+      </div>
+      <div class="d-flex justify-content-center gap-3 mb-4">
+        <a href="#" class="social-icon-btn d-flex align-items-center justify-content-center" aria-label="YouTube"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+        <a href="#" class="social-icon-btn d-flex align-items-center justify-content-center" aria-label="Instagram"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+        <a href="#" class="social-icon-btn d-flex align-items-center justify-content-center" aria-label="TikTok"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525 0h3.08c.12 1.052.7 2.055 1.637 2.673 1.026.68 2.261.93 3.478.932v3.295c-1.35-.04-2.69-.427-3.83-1.125-.13-.08-.258-.166-.381-.258v7.625c0 3.328-2.67 6.028-5.968 6.028-3.297 0-5.968-2.7-5.968-6.028 0-3.327 2.671-6.027 5.968-6.027.382 0 .759.036 1.125.105v3.315c-.366-.115-.75-.175-1.125-.175-1.5 0-2.715 1.215-2.715 2.715 0 1.5 1.215 2.715 2.715 2.715 1.5 0 2.715-1.215 2.715-2.715V0z"/></svg></a>
+      </div>
+      <p class="copyright-text mb-0">
+        © 2026 Viacom International Inc. Backpack and all related titles, logos and characters are trademarks of Backpack inc. All Rights Reserved
+      </p>
+    </div>
+  </footer>
+
+  <!-- MODAL DE INICIO DE SESIÓN -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered login-modal-dialog">
+      <div class="modal-content login-modal-content-custom overflow-hidden">
+        <div class="login-pink-box d-flex align-items-center justify-content-center position-relative overflow-hidden">
+          <div class="login-white-card bg-white position-relative">
+            <button type="button" class="btn-back-link border-0 bg-transparent p-0 mb-1" data-bs-dismiss="modal">
+              Atras
+            </button>
+            <div class="row align-items-center g-2">
+              <div class="col-12 col-sm-5 text-center">
+                <div class="login-avatar-circle mx-auto mb-1">
+                  <img src="imagenes/perfil.png" alt="Perfil Avatar" class="login-avatar-img">
+                </div>
+                <h2 class="login-card-title mb-0">INICIAR SESIÓN</h2>
+              </div>
+              <div class="col-12 col-sm-7">
+                <form>
+                  <div class="mb-2">
+                    <label for="loginEmail" class="form-label login-label ms-1">Email</label>
+                    <input type="email" class="form-control custom-login-input" id="loginEmail" placeholder="escribe aqui...">
+                  </div>
+                  <div class="mb-1 position-relative">
+                    <label for="loginPassword" class="form-label login-label ms-1">Contraseña</label>
+                    <div class="position-relative">
+                      <input type="password" class="form-control custom-login-input pe-4" id="loginPassword" placeholder="escribe aqui...">
+                      <button type="button" class="btn-toggle-eye position-absolute top-50 end-0 translate-middle-y me-2 border-0 bg-transparent p-0">
+                        <svg width="14" height="14" fill="#555" viewBox="0 0 16 16">
+                          <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+                          <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <div class="text-center mt-3">
+              <button type="button" class="btn btn-orange-submit px-4 py-1 mb-2">ENTRAR</button>
+              <div class="d-flex flex-column gap-1">
+                <a href="#" class="login-secondary-link">REGISTRARSE</a>
+                <a href="#" class="login-secondary-link">OLVIDÓ LA CONTRASEÑA</a>
+              </div>
+            </div>
+          </div>
+          <img src="imagenes/lulu 2.png" alt="Personaje Pelirroja" class="char-overlay char-bottom-left">
+          <img src="imagenes/pan 2.png" alt="Personaje Rubia" class="char-overlay char-bottom-right">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- LÓGICA DEL JUEGO CON LA CORRECCIÓN DE SCROLL EVITADO -->
+  <script>
+    const playerAssets = {
+      normal: { src: 'assets/normal.png', width: 1024, height: 1536 },
+      jump: { src: 'assets/arriba.png', width: 1199, height: 1312 },
+      duck: { src: 'assets/abajo.png', width: 1199, height: 1312 }
+    };
+
+    const loadedImages = {};
+    Object.keys(playerAssets).forEach(key => {
+      const img = new Image();
+      img.src = playerAssets[key].src;
+      loadedImages[key] = img;
+    });
+
+    const SoundFX = (() => {
+      let audioCtx = null;
+      let muted = false;
+
+      function ensureContext() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) audioCtx = new AudioContextClass();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+      }
+
+      function playTone({ freqStart, freqEnd, duration, type = 'sine', volume = 0.15, delay = 0 }) {
+        if (muted) return;
+        const ctx = ensureContext();
+        if (!ctx) return;
+
+        const now = ctx.currentTime + delay;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freqStart, now);
+        if (freqEnd !== undefined) {
+          osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqEnd), now + duration);
+        }
+
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(volume, now + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + duration + 0.02);
+      }
+
+      return {
+        toggleMute() {
+          muted = !muted;
+          return muted;
+        },
+        jump() {
+          playTone({ freqStart: 260, freqEnd: 560, duration: 0.16, type: 'triangle', volume: 0.16 });
+        },
+        duck() {
+          playTone({ freqStart: 220, freqEnd: 110, duration: 0.09, type: 'sine', volume: 0.1 });
+        },
+        land() {
+          playTone({ freqStart: 130, freqEnd: 65, duration: 0.07, type: 'sine', volume: 0.08 });
+        },
+        collectPowerup() {
+          playTone({ freqStart: 523.25, freqEnd: 783.99, duration: 0.14, type: 'triangle', volume: 0.16 });
+          playTone({ freqStart: 783.99, freqEnd: 1046.5, duration: 0.18, type: 'triangle', volume: 0.16, delay: 0.08 });
+        },
+        shieldBreak() {
+          playTone({ freqStart: 420, freqEnd: 110, duration: 0.25, type: 'sawtooth', volume: 0.16 });
+        },
+        smashObstacle() {
+          playTone({ freqStart: 300, freqEnd: 90, duration: 0.18, type: 'square', volume: 0.14 });
+        },
+        milestone() {
+          const notes = [523.25, 659.25, 783.99, 1046.5];
+          notes.forEach((n, i) => {
+            playTone({ freqStart: n, duration: 0.12, type: 'sine', volume: 0.13, delay: i * 0.07 });
+          });
+        },
+        gameOver() {
+          playTone({ freqStart: 340, freqEnd: 260, duration: 0.16, type: 'sawtooth', volume: 0.15, delay: 0 });
+          playTone({ freqStart: 250, freqEnd: 180, duration: 0.18, type: 'sawtooth', volume: 0.15, delay: 0.15 });
+          playTone({ freqStart: 170, freqEnd: 85, duration: 0.34, type: 'sawtooth', volume: 0.16, delay: 0.31 });
+        }
+      };
+    })();
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+
+    const CANVAS_WIDTH = 960;
+    const CANVAS_HEIGHT = 540;
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
+
+    const startScreen = document.getElementById('start-screen');
+    const gameoverScreen = document.getElementById('gameover-screen');
+    const startBtn = document.getElementById('start-btn');
+    const restartBtn = document.getElementById('restart-btn');
+    const muteBtn = document.getElementById('mute-btn');
+    const muteIcon = document.getElementById('mute-icon');
+    const hudScoreEl = document.getElementById('hud-score');
+    const hudHighscoreEl = document.getElementById('hud-highscore');
+    const finalScoreEl = document.getElementById('final-score');
+    const finalDodgedEl = document.getElementById('final-dodged');
+    const finalHighscoreEl = document.getElementById('final-highscore');
+    const gameoverTipEl = document.getElementById('gameover-tip');
+    const activePowersContainer = document.getElementById('active-powers-container');
+    const mobileControls = document.getElementById('mobile-controls');
+    const mobileJumpBtn = document.getElementById('mobile-jump-btn');
+    const mobileDuckBtn = document.getElementById('mobile-duck-btn');
+
+    let gameState = 'START';
+    let animationFrameId = null;
+    let lastTimestamp = 0;
+
+    let score = 0;
+    let highScore = Number(localStorage.getItem('backpack_runner_highscore')) || 0;
+    hudHighscoreEl.innerText = Math.floor(highScore);
+    let obstaclesDodged = 0;
+    let lastMilestone = 0;
+
+    const BASE_SPEED = 6.2;
+    const MAX_SPEED = 14.5;
+    let gameSpeed = BASE_SPEED;
+    let frameCount = 0;
+
+    const groundY = 472;
+
+    let distanceSinceLastObstacle = 0;
+    let nextObstacleGap = 420;
+    let distanceSinceLastPowerup = 0;
+    let nextPowerupGap = 1250;
+
+    let shakeTimer = 0;
+    let shakeIntensity = 0;
+
+    function triggerScreenShake(intensity = 8, frames = 14) {
+      shakeIntensity = intensity;
+      shakeTimer = frames;
+    }
+
+    const floatingTexts = [];
+    const particles = [];
+    const shockwaves = [];
+
+    function showFloatingText(text, x, y, color) {
+      floatingTexts.push({ text, x, y, color, opacity: 1, vy: -1.5 });
+    }
+
+    function spawnShockwave(x, y, color = '#51e5ff') {
+      shockwaves.push({ x, y, radius: 10, maxRadius: 90, color, alpha: 1 });
+    }
+
+    function spawnParticles(x, y, color, count = 14, speedScale = 1) {
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+        const speed = (2 + Math.random() * 5) * speedScale;
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 1.5,
+          size: 4 + Math.random() * 5,
+          color,
+          life: 1,
+          decay: 0.025 + Math.random() * 0.02,
+          gravity: 0.18
+        });
+      }
+    }
+
+    function spawnDustParticle(x, y) {
+      particles.push({
+        x: x + (Math.random() - 0.5) * 16,
+        y: y - 4,
+        vx: -gameSpeed * 0.35 - Math.random() * 1.2,
+        vy: -0.5 - Math.random() * 1.2,
+        size: 4 + Math.random() * 4,
+        color: 'rgba(255, 255, 255, 0.75)',
+        life: 1,
+        decay: 0.045,
+        gravity: -0.02
+      });
+    }
+
+    function updateAndDrawFX(dtFactor) {
+      for (let i = shockwaves.length - 1; i >= 0; i--) {
+        const sw = shockwaves[i];
+        sw.radius += 6 * dtFactor;
+        sw.alpha -= 0.04 * dtFactor;
+        if (sw.alpha <= 0 || sw.radius >= sw.maxRadius) {
+          shockwaves.splice(i, 1);
+          continue;
+        }
+        ctx.save();
+        ctx.strokeStyle = sw.color;
+        ctx.globalAlpha = Math.max(0, sw.alpha);
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx * dtFactor;
+        p.y += p.vy * dtFactor;
+        p.vy += p.gravity * dtFactor;
+        p.life -= p.decay * dtFactor;
+
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ft.y += ft.vy * dtFactor;
+        ft.opacity -= 0.018 * dtFactor;
+
+        if (ft.opacity <= 0) {
+          floatingTexts.splice(i, 1);
+          continue;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, ft.opacity);
+        ctx.font = '900 24px Galindo, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#0F172A';
+        ctx.strokeText(ft.text, ft.x, ft.y);
+        ctx.fillStyle = ft.color;
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
+      }
+    }
+
+    muteBtn.addEventListener('click', () => {
+      const isMuted = SoundFX.toggleMute();
+      muteIcon.className = isMuted ? 'bi bi-volume-mute-fill' : 'bi bi-volume-up-fill';
+    });
+
+    const player = {
+      x: 95,
+      standHeight: 185,
+      jumpHeight: 190,
+      duckHeight: 145,
+      
+      height: 185,
+      width: 185 * (playerAssets.normal.width / playerAssets.normal.height),
+      y: groundY - 185,
+
+      velocityY: 0,
+      gravity: 0.78,
+      jumpPower: -19.5,
+      isGrounded: true,
+      isDucking: false,
+      jumpHeld: false,
+      jumpBufferTimer: 0,
+
+      scaleX: 1,
+      scaleY: 1,
+
+      shieldActive: false,
+      invincibleActive: false,
+      invincibleTimer: 0,
+      invincibleMax: 330,
+
+      slowMoActive: false,
+      slowMoTimer: 0,
+      slowMoMax: 300,
+
+      magnetActive: false,
+      magnetTimer: 0,
+      magnetMax: 360,
+
+      doublePointsActive: false,
+      doublePointsTimer: 0,
+      doublePointsMax: 360,
+
+      reset() {
+        this.isDucking = false;
+        this.jumpHeld = false;
+        this.jumpBufferTimer = 0;
+        this.height = this.standHeight;
+        this.width = this.height * (playerAssets.normal.width / playerAssets.normal.height);
+        this.y = groundY - this.height;
+        this.velocityY = 0;
+        this.isGrounded = true;
+        this.scaleX = 1;
+        this.scaleY = 1;
+        this.shieldActive = false;
+        this.invincibleActive = false;
+        this.invincibleTimer = 0;
+        this.slowMoActive = false;
+        this.slowMoTimer = 0;
+        this.magnetActive = false;
+        this.magnetTimer = 0;
+        this.doublePointsActive = false;
+        this.doublePointsTimer = 0;
+      },
+
+      requestJump() {
+        this.jumpHeld = true;
+        if (this.isGrounded) {
+          this.executeJump();
+        } else {
+          this.jumpBufferTimer = 12;
+        }
+      },
+
+      releaseJump() {
+        this.jumpHeld = false;
+        if (!this.isGrounded && this.velocityY < -5.5) {
+          this.velocityY *= 0.65;
+        }
+      },
+
+      executeJump() {
+        if (this.isDucking) {
+          this.isDucking = false;
+        }
+        this.height = this.jumpHeight;
+        this.width = this.height * (playerAssets.jump.width / playerAssets.jump.height);
+        this.y = groundY - this.height;
+
+        this.velocityY = this.jumpPower;
+        this.isGrounded = false;
+        this.jumpBufferTimer = 0;
+
+        this.scaleX = 0.90;
+        this.scaleY = 1.12;
+
+        spawnParticles(this.x + this.width / 2, groundY - 4, '#FFFFFF', 7, 0.7);
+        SoundFX.jump();
+      },
+
+      setDuck(active) {
+        if (active) {
+          if (!this.isDucking && this.isGrounded) {
+            this.isDucking = true;
+            this.height = this.duckHeight;
+            this.width = this.height * (playerAssets.duck.width / playerAssets.duck.height);
+            this.y = groundY - this.height;
+            this.scaleX = 1.05;
+            this.scaleY = 0.95;
+            SoundFX.duck();
+          } else if (!this.isGrounded) {
+            if (this.velocityY < 14) {
+              this.velocityY = 17.0;
+              SoundFX.duck();
+            }
+          }
+        } else {
+          if (this.isDucking) {
+            this.isDucking = false;
+            this.height = this.standHeight;
+            this.width = this.height * (playerAssets.normal.width / playerAssets.normal.height);
+            this.y = groundY - this.height;
+            this.scaleX = 0.98;
+            this.scaleY = 1.02;
+          }
+        }
+      },
+
+      update(dtFactor) {
+        if (this.jumpBufferTimer > 0) {
+          this.jumpBufferTimer -= dtFactor;
+        }
+
+        this.scaleX += (1 - this.scaleX) * 0.22 * dtFactor;
+        this.scaleY += (1 - this.scaleY) * 0.22 * dtFactor;
+
+        const effectiveGravity = this.isDucking && !this.isGrounded ? this.gravity * 1.8 : this.gravity;
+        this.velocityY += effectiveGravity * dtFactor;
+        this.y += this.velocityY * dtFactor;
+
+        if (this.y >= groundY - this.height) {
+          const wasAirborne = !this.isGrounded;
+          this.y = groundY - this.height;
+          this.velocityY = 0;
+          this.isGrounded = true;
+
+          if (this.isDucking) {
+            this.height = this.duckHeight;
+            this.width = this.height * (playerAssets.duck.width / playerAssets.duck.height);
+            this.y = groundY - this.height;
+          } else {
+            this.height = this.standHeight;
+            this.width = this.height * (playerAssets.normal.width / playerAssets.normal.height);
+            this.y = groundY - this.height;
+          }
+
+          if (wasAirborne) {
+            this.scaleX = 1.12;
+            this.scaleY = 0.9;
+            spawnParticles(this.x + this.width / 2, groundY - 2, '#E8DFD8', 6, 0.6);
+            SoundFX.land();
+
+            if (this.jumpBufferTimer > 0) {
+              this.executeJump();
+              return;
+            }
+          }
+        }
+
+        if (this.isGrounded) {
+          if (Math.random() < 0.28 * dtFactor) {
+            spawnDustParticle(this.x + 35, groundY);
+          }
+        }
+
+        if (this.invincibleActive) {
+          this.invincibleTimer -= dtFactor;
+          if (this.invincibleTimer <= 0) { this.invincibleActive = false; updatePowerHUD(); }
+        }
+        if (this.slowMoActive) {
+          this.slowMoTimer -= dtFactor;
+          if (this.slowMoTimer <= 0) { this.slowMoActive = false; updatePowerHUD(); }
+        }
+        if (this.magnetActive) {
+          this.magnetTimer -= dtFactor;
+          if (this.magnetTimer <= 0) { this.magnetActive = false; updatePowerHUD(); }
+        }
+        if (this.doublePointsActive) {
+          this.doublePointsTimer -= dtFactor;
+          if (this.doublePointsTimer <= 0) { this.doublePointsActive = false; updatePowerHUD(); }
+        }
+      },
+
+      getHitbox() {
+        const padX = 26;
+        const padTop = this.isDucking ? 16 : 20;
+        const padBottom = 8;
+        return {
+          x: this.x + padX,
+          y: this.y + padTop,
+          width: this.width - padX * 2,
+          height: this.height - padTop - padBottom
+        };
+      },
+
+      draw() {
+        ctx.save();
+
+        const heightAboveGround = Math.max(0, groundY - (this.y + this.height));
+        const shadowScale = Math.max(0.35, 1 - heightAboveGround / 280);
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
+        ctx.beginPath();
+        ctx.ellipse(
+          this.x + this.width / 2,
+          groundY + 4,
+          (this.width * 0.38) * shadowScale,
+          8 * shadowScale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        const anchorX = this.x + this.width / 2;
+        const anchorY = this.y + this.height;
+
+        ctx.translate(anchorX, anchorY);
+        ctx.scale(this.scaleX, this.scaleY);
+
+        if (this.invincibleActive) {
+          ctx.shadowColor = '#ffc107';
+          ctx.shadowBlur = 24;
+        } else if (this.shieldActive) {
+          ctx.shadowColor = '#51e5ff';
+          ctx.shadowBlur = 18;
+        } else if (this.magnetActive) {
+          ctx.shadowColor = '#ff758c';
+          ctx.shadowBlur = 18;
+        }
+
+        const drawX = -this.width / 2;
+        const drawY = -this.height;
+        const w = this.width;
+        const h = this.height;
+
+        let currentImg = null;
+        if (this.isDucking && loadedImages.duck && loadedImages.duck.complete && loadedImages.duck.naturalWidth > 0) {
+          currentImg = loadedImages.duck;
+        } else if (!this.isGrounded && loadedImages.jump && loadedImages.jump.complete && loadedImages.jump.naturalWidth > 0) {
+          currentImg = loadedImages.jump;
+        } else if (loadedImages.normal && loadedImages.normal.complete && loadedImages.normal.naturalWidth > 0) {
+          currentImg = loadedImages.normal;
+        }
+
+        if (currentImg) {
+          ctx.drawImage(currentImg, drawX, drawY, w, h);
+        }
+
+        if (this.shieldActive) {
+          ctx.strokeStyle = '#51e5ff';
+          ctx.lineWidth = 6;
+          ctx.fillStyle = 'rgba(81, 229, 255, 0.16)';
+          ctx.beginPath();
+          ctx.arc(0, -h / 2, Math.max(w, h) * 0.52, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+    };
+
+    const obstacles = [];
+
+    const OBSTACLE_TYPES = [
+      { type: 'VIRUS', label: 'Virus Bug', color: '#ff758c', icon: '🦠', width: 68, height: 68, yOffset: 0 },
+      { type: 'VIRUS_FLY', label: 'Malware Aéreo', color: '#D868EC', icon: '👾', width: 72, height: 66, yOffset: 100 },
+      { type: 'CRITICA', label: 'Hate', color: '#ff758c', icon: '💬', text: 'Hate', width: 110, height: 62, yOffset: 0 },
+      { type: 'CRITICA', label: 'Fake News', color: '#D868EC', icon: '💬', text: 'Fake News', width: 140, height: 62, yOffset: 0 },
+      { type: 'CRITICA', label: 'Crítica', color: '#ff758c', icon: '💬', text: 'Crítica', width: 120, height: 62, yOffset: 0 }
+    ];
+
+    function spawnObstacle() {
+      const availableTemplates = score < 80
+        ? OBSTACLE_TYPES.filter(o => o.type !== 'VIRUS_FLY')
+        : OBSTACLE_TYPES;
+
+      const template = availableTemplates[Math.floor(Math.random() * availableTemplates.length)];
+
+      obstacles.push({
+        x: CANVAS_WIDTH + 60,
+        y: groundY - template.height - template.yOffset,
+        baseY: groundY - template.height - template.yOffset,
+        width: template.width,
+        height: template.height,
+        color: template.color,
+        icon: template.icon,
+        text: template.text || null,
+        type: template.type,
+        passed: false,
+        animPhase: Math.random() * Math.PI * 2
+      });
+
+      const currentEffectiveSpeed = player.slowMoActive ? gameSpeed * 0.65 : gameSpeed;
+      const minSafeGap = 390 + currentEffectiveSpeed * 28;
+      const randomExtra = 180 + Math.random() * 240;
+      nextObstacleGap = minSafeGap + randomExtra;
+    }
+
+    function updateObstacles(dtFactor) {
+      const playerBox = player.getHitbox();
+      const actualSpeed = player.slowMoActive ? gameSpeed * 0.65 : (player.isDucking ? gameSpeed * 1.25 : gameSpeed);
+
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        const obs = obstacles[i];
+        obs.x -= actualSpeed * dtFactor;
+        obs.animPhase += 0.14 * dtFactor;
+
+        if (obs.type === 'VIRUS_FLY') {
+          obs.y = obs.baseY + Math.sin(obs.animPhase) * 4;
+        }
+
+        if (!obs.passed && obs.x + obs.width < player.x) {
+          obs.passed = true;
+          obstaclesDodged++;
+        }
+
+        const obsBox = {
+          x: obs.x + 8,
+          y: obs.y + 6,
+          width: obs.width - 16,
+          height: obs.height - 12
+        };
+
+        if (checkRectOverlap(playerBox, obsBox)) {
+          if (player.invincibleActive) {
+            score += 25;
+            obstaclesDodged++;
+            spawnShockwave(obs.x + obs.width / 2, obs.y + obs.height / 2, '#ffc107');
+            spawnParticles(obs.x + obs.width / 2, obs.y + obs.height / 2, '#ffc107', 16, 1.3);
+            showFloatingText('¡DESTRUIDO! +25', obs.x + obs.width / 2, obs.y, '#ffc107');
+            triggerScreenShake(5, 8);
+            SoundFX.smashObstacle();
+            obstacles.splice(i, 1);
+            continue;
+          } else if (player.shieldActive) {
+            player.shieldActive = false;
+            updatePowerHUD();
+            spawnShockwave(obs.x + obs.width / 2, obs.y + obs.height / 2, '#51e5ff');
+            spawnParticles(obs.x + obs.width / 2, obs.y + obs.height / 2, '#51e5ff', 18, 1.3);
+            showFloatingText('¡ESCUDO PROTEGIÓ!', obs.x + obs.width / 2, obs.y, '#51e5ff');
+            triggerScreenShake(9, 14);
+            SoundFX.shieldBreak();
+            obstacles.splice(i, 1);
+            continue;
+          } else {
+            spawnParticles(player.x + player.width / 2, player.y + player.height / 2, '#ff758c', 24, 1.5);
+            triggerScreenShake(12, 20);
+            SoundFX.gameOver();
+            triggerGameOver(obs.type);
+            return;
+          }
+        }
+
+        if (obs.x + obs.width < -120) {
+          obstacles.splice(i, 1);
+        }
+      }
+    }
+
+    function drawObstacles() {
+      obstacles.forEach(obs => {
+        ctx.save();
+
+        ctx.shadowColor = '#ff334b';
+        ctx.shadowBlur = 16;
+
+        if (obs.type === 'CRITICA') {
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.18)';
+          ctx.beginPath();
+          ctx.roundRect(obs.x + 4, obs.y + 5, obs.width, obs.height, 16);
+          ctx.fill();
+
+          ctx.fillStyle = obs.color;
+          ctx.beginPath();
+          ctx.roundRect(obs.x, obs.y, obs.width, obs.height, 16);
+          ctx.fill();
+
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = '#ff334b';
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(obs.x + 20, obs.y + obs.height - 1);
+          ctx.lineTo(obs.x + 10, obs.y + obs.height + 11);
+          ctx.lineTo(obs.x + 35, obs.y + obs.height - 1);
+          ctx.fill();
+
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = '800 20px Geologica, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(obs.text, obs.x + obs.width / 2, obs.y + obs.height / 2);
+        } else {
+          const cx = obs.x + obs.width / 2;
+          const cy = obs.y + obs.height / 2;
+
+          if (obs.type === 'VIRUS_FLY') {
+            const wingFlap = Math.sin(obs.animPhase * 2.2) * 10;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.strokeStyle = '#ff334b';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.ellipse(cx - 30, cy - 10 + wingFlap * 0.5, 16, 8, -0.4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.ellipse(cx + 30, cy - 10 + wingFlap * 0.5, 16, 8, 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          }
+
+          ctx.fillStyle = obs.color;
+          ctx.beginPath();
+          ctx.arc(cx, cy, obs.width / 2, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = '#ff334b';
+          ctx.stroke();
+
+          ctx.font = '40px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(obs.icon, cx, cy + 2);
+        }
+
+        ctx.restore();
+      });
+    }
+
+    const powerups = [];
+
+    const POWERUP_TYPES = [
+      { name: 'PENCIL', icon: '✏️', color: '#ffc107', label: '+100 Pts' },
+      { name: 'NOTEBOOK', icon: '📓', color: '#51e5ff', label: 'Escudo' },
+      { name: 'RULER', icon: '📏', color: '#D868EC', label: 'Invencible' },
+      { name: 'CLOCK', icon: '⏰', color: '#2ecc71', label: 'Reloj SlowMo' },
+      { name: 'MAGNET', icon: '🧲', color: '#ff758c', label: 'Imán Puntos' },
+      { name: 'PILL', icon: '💊', color: '#e67e22', label: 'Doble Puntos' }
+    ];
+
+    function spawnPowerup() {
+      const spawnX = CANVAS_WIDTH + 50;
+
+      const tooCloseToObstacle = obstacles.some(obs => Math.abs((obs.x + obs.width / 2) - spawnX) < 160);
+      if (tooCloseToObstacle) {
+        distanceSinceLastPowerup -= 120;
+        return;
+      }
+
+      const type = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
+      const floatHeight = Math.random() > 0.45 ? 130 : 230;
+
+      powerups.push({
+        x: spawnX,
+        y: groundY - floatHeight,
+        width: 56,
+        height: 56,
+        type: type.name,
+        icon: type.icon,
+        color: type.color,
+        label: type.label,
+        pulseAngle: 0
+      });
+
+      nextPowerupGap = 1250 + Math.random() * 550;
+    }
+
+    function applyPowerup(p) {
+      const fxX = player.x + player.width / 2;
+      const fxY = player.y;
+
+      spawnShockwave(fxX, fxY + player.height / 2, p.color);
+
+      if (p.type === 'PENCIL') {
+        score += player.doublePointsActive ? 200 : 100;
+        spawnParticles(fxX, fxY, p.color, 16, 1.1);
+        showFloatingText(player.doublePointsActive ? '+200 PTS (2x)!' : '+100 PTS!', fxX, fxY - 12, p.color);
+      } else if (p.type === 'NOTEBOOK') {
+        player.shieldActive = true;
+        spawnParticles(fxX, fxY, p.color, 16, 1.1);
+        showFloatingText('¡ESCUDO ACTIVO!', fxX, fxY - 12, p.color);
+      } else if (p.type === 'RULER') {
+        player.invincibleActive = true;
+        player.invincibleTimer = player.invincibleMax;
+        spawnParticles(fxX, fxY, p.color, 20, 1.2);
+        showFloatingText('¡INVENCIBLE!', fxX, fxY - 12, p.color);
+      } else if (p.type === 'CLOCK') {
+        player.slowMoActive = true;
+        player.slowMoTimer = player.slowMoMax;
+        spawnParticles(fxX, fxY, p.color, 18, 1.1);
+        showFloatingText('⏰ ¡CÁMARA LENTA!', fxX, fxY - 12, p.color);
+      } else if (p.type === 'MAGNET') {
+        player.magnetActive = true;
+        player.magnetTimer = player.magnetMax;
+        spawnParticles(fxX, fxY, p.color, 18, 1.1);
+        showFloatingText('🧲 ¡IMÁN DE PUNTOS!', fxX, fxY - 12, p.color);
+      } else if (p.type === 'PILL') {
+        player.doublePointsActive = true;
+        player.doublePointsTimer = player.doublePointsMax;
+        spawnParticles(fxX, fxY, p.color, 22, 1.3);
+        showFloatingText('💊 ¡PUNTOS x2!', fxX, fxY - 12, p.color);
+      }
+
+      SoundFX.collectPowerup();
+      updatePowerHUD();
+    }
+
+    function updatePowerups(dtFactor) {
+      const playerBox = player.getHitbox();
+      const actualSpeed = player.slowMoActive ? gameSpeed * 0.65 : (player.isDucking ? gameSpeed * 1.25 : gameSpeed);
+
+      for (let i = powerups.length - 1; i >= 0; i--) {
+        const p = powerups[i];
+        p.x -= actualSpeed * dtFactor;
+        p.pulseAngle += 0.09 * dtFactor;
+
+        if (player.magnetActive) {
+          const dx = (player.x + player.width / 2) - (p.x + p.width / 2);
+          const dy = (player.y + player.height / 2) - (p.y + p.height / 2);
+          const dist = Math.hypot(dx, dy);
+          if (dist < 280) {
+            p.x += (dx / dist) * 7.5 * dtFactor;
+            p.y += (dy / dist) * 7.5 * dtFactor;
+          }
+        }
+
+        const bobbingY = Math.sin(p.pulseAngle) * 8;
+        const powerBox = {
+          x: p.x - 4,
+          y: p.y + bobbingY - 4,
+          width: p.width + 8,
+          height: p.height + 8
+        };
+
+        if (checkRectOverlap(playerBox, powerBox)) {
+          applyPowerup(p);
+          powerups.splice(i, 1);
+          continue;
+        }
+
+        if (p.x + p.width < -60) {
+          powerups.splice(i, 1);
+        }
+      }
+    }
+
+    function drawPowerups() {
+      powerups.forEach(p => {
+        ctx.save();
+        const bobbingY = Math.sin(p.pulseAngle) * 8;
+        const centerX = p.x + p.width / 2;
+        const centerY = p.y + p.height / 2 + bobbingY;
+        const glowRadius = p.width / 2 + 5 + Math.sin(p.pulseAngle * 1.5) * 3;
+
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = 0.32;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, p.width / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.stroke();
+        ctx.font = '28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.icon, centerX, centerY + 1);
+
+        ctx.restore();
+      });
+    }
+
+    function updatePowerHUD() {
+      const activeList = [];
+      if (player.shieldActive) {
+        activeList.push('<span class="badge-power">🛡️ Escudo</span>');
+      }
+      if (player.invincibleActive) {
+        const secs = Math.ceil(player.invincibleTimer / 60);
+        activeList.push(`<span class="badge-power-gold">⭐ Invencible (${secs}s)</span>`);
+      }
+      if (player.slowMoActive) {
+        const secs = Math.ceil(player.slowMoTimer / 60);
+        activeList.push(`<span class="badge-power">⏰ SlowMo (${secs}s)</span>`);
+      }
+      if (player.magnetActive) {
+        const secs = Math.ceil(player.magnetTimer / 60);
+        activeList.push(`<span class="badge-power-purple">🧲 Imán (${secs}s)</span>`);
+      }
+      if (player.doublePointsActive) {
+        const secs = Math.ceil(player.doublePointsTimer / 60);
+        activeList.push(`<span class="badge-power-gold">💊 x2 Pts (${secs}s)</span>`);
+      }
+
+      if (activeList.length === 0) {
+        activePowersContainer.innerHTML = '<span style="color: #888; font-style: italic; font-size: 0.72rem;">Ninguno activo</span>';
+      } else {
+        activePowersContainer.innerHTML = activeList.join(' ');
+      }
+    }
+
+    let hallwayOffset = 0;
+
+    function drawEnvironment(dtFactor = 1) {
+      ctx.fillStyle = '#83807D';
+      ctx.fillRect(0, 0, CANVAS_WIDTH, 56);
+      ctx.strokeStyle = '#111111';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, 56);
+      ctx.lineTo(CANVAS_WIDTH, 56);
+      ctx.stroke();
+
+      const ceilingStep = 240;
+      const actualSpeed = player.slowMoActive ? gameSpeed * 0.65 : (player.isDucking ? gameSpeed * 1.25 : gameSpeed);
+      const ceilingShift = (hallwayOffset * 0.5) % ceilingStep;
+      for (let cx = -ceilingShift - ceilingStep; cx < CANVAS_WIDTH + ceilingStep; cx += ceilingStep) {
+        ctx.beginPath();
+        ctx.moveTo(cx, 0);
+        ctx.lineTo(cx - 120, 56);
+        ctx.stroke();
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(0, 28);
+      ctx.lineTo(CANVAS_WIDTH, 28);
+      ctx.stroke();
+
+      ctx.fillStyle = '#5A3525';
+      ctx.fillRect(0, 56, CANVAS_WIDTH, 20);
+      ctx.beginPath();
+      ctx.moveTo(0, 76);
+      ctx.lineTo(CANVAS_WIDTH, 76);
+      ctx.stroke();
+
+      ctx.fillStyle = '#D3AD82';
+      ctx.fillRect(0, 76, CANVAS_WIDTH, groundY - 76);
+
+      const moduleWidth = 960;
+      const currentX = -(hallwayOffset % moduleWidth);
+
+      for (let m = currentX - moduleWidth; m < CANVAS_WIDTH + moduleWidth; m += moduleWidth) {
+        drawLockerBank(m - 120, 145, 350, 310, 3);
+
+        const doorX = m + 260;
+        const doorY = 92;
+        const doorW = 180;
+        const doorH = 380;
+
+        ctx.fillStyle = '#532D1B';
+        ctx.fillRect(doorX - 10, doorY, doorW + 20, doorH);
+        ctx.strokeStyle = '#111111';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(doorX - 10, doorY, doorW + 20, doorH);
+
+        ctx.fillStyle = '#3E2012';
+        ctx.fillRect(doorX, doorY + 10, doorW, doorH - 10);
+        ctx.strokeRect(doorX, doorY + 10, doorW, doorH - 10);
+
+        const winX = doorX + 38;
+        const winY = doorY + 52;
+        const winW = 104;
+        const winH = 90;
+
+        ctx.fillStyle = '#2A160C';
+        ctx.fillRect(winX - 4, winY - 4, winW + 8, winH + 8);
+        ctx.strokeRect(winX - 4, winY - 4, winW + 8, winH + 8);
+
+        ctx.fillStyle = '#89BCE3';
+        ctx.fillRect(winX, winY, winW, winH);
+        ctx.strokeRect(winX, winY, winW, winH);
+
+        ctx.fillStyle = '#BBE0FA';
+        ctx.beginPath();
+        ctx.moveTo(winX, winY + winH);
+        ctx.lineTo(winX + 45, winY + winH);
+        ctx.lineTo(winX + winW, winY + 25);
+        ctx.lineTo(winX + winW, winY);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#D6DADF';
+        ctx.fillRect(doorX + 15, doorY + 195, 36, 14);
+        ctx.strokeRect(doorX + 15, doorY + 195, 36, 14);
+
+        ctx.fillRect(doorX + 26, doorY + 209, 14, 25);
+        ctx.strokeRect(doorX + 26, doorY + 209, 14, 25);
+
+        ctx.fillStyle = '#111111';
+        ctx.beginPath();
+        ctx.arc(doorX + 33, doorY + 218, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(doorX + 32, doorY + 218, 2, 7);
+
+        drawLockerBank(m + 475, 145, 520, 310, 5);
+      }
+
+      ctx.fillStyle = '#5A3525';
+      ctx.fillRect(0, 455, CANVAS_WIDTH, 17);
+      ctx.strokeStyle = '#111111';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, 455);
+      ctx.lineTo(CANVAS_WIDTH, 455);
+      ctx.moveTo(0, 472);
+      ctx.lineTo(CANVAS_WIDTH, 472);
+      ctx.stroke();
+
+      ctx.fillStyle = '#DDD2C3';
+      ctx.fillRect(0, groundY, CANVAS_WIDTH, CANVAS_HEIGHT - groundY);
+
+      ctx.beginPath();
+      ctx.moveTo(0, groundY + 45);
+      ctx.lineTo(CANVAS_WIDTH, groundY + 45);
+      ctx.stroke();
+
+      if (gameState === 'PLAYING') {
+        hallwayOffset += actualSpeed * dtFactor;
+      }
+    }
+
+    function drawLockerBank(x, y, width, height, lockerCount) {
+      ctx.fillStyle = '#495663';
+      ctx.fillRect(x, y, width, height);
+      ctx.strokeStyle = '#111111';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, width, height);
+
+      const singleWidth = width / lockerCount;
+
+      for (let i = 0; i < lockerCount; i++) {
+        const lx = x + i * singleWidth;
+
+        ctx.fillStyle = '#B6C5D0';
+        ctx.fillRect(lx + 4, y + 8, singleWidth - 8, height - 12);
+        ctx.strokeRect(lx + 4, y + 8, singleWidth - 8, height - 12);
+
+        ctx.fillStyle = '#37414A';
+        const ventW = singleWidth - 32;
+        const ventX = lx + (singleWidth - ventW) / 2;
+
+        for (let v = 0; v < 3; v++) {
+          ctx.fillRect(ventX, y + 25 + v * 7, ventW, 3);
+        }
+
+        ctx.fillStyle = '#222930';
+        ctx.fillRect(lx + singleWidth - 18, y + height / 2 - 15, 7, 28);
+
+        for (let v = 0; v < 3; v++) {
+          ctx.fillRect(ventX, y + height - 42 + v * 7, ventW, 3);
+        }
+      }
+    }
+
+    function checkRectOverlap(r1, r2) {
+      return (
+        r1.x < r2.x + r2.width &&
+        r1.x + r1.width > r2.x &&
+        r1.y < r2.y + r2.height &&
+        r1.y + r1.height > r2.y
+      );
+    }
+
+    function triggerGameOver(hitType) {
+      gameState = 'GAMEOVER';
+      mobileControls.classList.add('hidden');
+
+      if (score > highScore) {
+        highScore = Math.floor(score);
+        localStorage.setItem('backpack_runner_highscore', highScore);
+        hudHighscoreEl.innerText = highScore;
+      }
+
+      if (hitType === 'VIRUS_FLY') {
+        gameoverTipEl.textContent = '💡 Consejo: ¡Usa ↓ / S o desliza abajo para agacharte bajo los obstáculos aéreos!';
+      } else {
+        gameoverTipEl.textContent = '¡No te rindas! Cada intento te hace más sabio y ágil.';
+      }
+
+      finalScoreEl.innerText = Math.floor(score);
+      finalDodgedEl.innerText = obstaclesDodged;
+      finalHighscoreEl.innerText = Math.floor(highScore);
+      gameoverScreen.classList.remove('hidden');
+    }
+
+    function gameLoop(timestamp) {
+      if (gameState !== 'PLAYING') return;
+
+      if (!lastTimestamp) lastTimestamp = timestamp;
+      const rawDt = (timestamp - lastTimestamp) / 16.6667;
+      lastTimestamp = timestamp;
+      const dtFactor = Math.min(2.2, Math.max(0.5, rawDt));
+
+      frameCount++;
+
+      if (gameSpeed < MAX_SPEED) {
+        gameSpeed += 0.0014 * dtFactor;
+      }
+
+      const pointsIncrement = player.doublePointsActive ? 0.36 : 0.18;
+      score += pointsIncrement * dtFactor;
+      hudScoreEl.innerText = Math.floor(score);
+
+      const currentMilestone = Math.floor(score / 500) * 500;
+      if (currentMilestone > 0 && currentMilestone > lastMilestone) {
+        lastMilestone = currentMilestone;
+        showFloatingText(`🎉 ¡${currentMilestone} PUNTOS!`, CANVAS_WIDTH / 2, 145, '#ffc107');
+        spawnParticles(CANVAS_WIDTH / 2, 145, '#ffc107', 20, 1.2);
+        SoundFX.milestone();
+      }
+
+      const actualSpeed = player.slowMoActive ? gameSpeed * 0.65 : (player.isDucking ? gameSpeed * 1.25 : gameSpeed);
+      const traveled = actualSpeed * dtFactor;
+      distanceSinceLastObstacle += traveled;
+      distanceSinceLastPowerup += traveled;
+
+      if (distanceSinceLastObstacle >= nextObstacleGap) {
+        spawnObstacle();
+        distanceSinceLastObstacle = 0;
+      }
+
+      if (distanceSinceLastPowerup >= nextPowerupGap) {
+        spawnPowerup();
+        distanceSinceLastPowerup = 0;
+      }
+
+      if ((player.invincibleActive || player.slowMoActive || player.magnetActive || player.doublePointsActive) && frameCount % 10 === 0) {
+        updatePowerHUD();
+      }
+
+      ctx.save();
+      ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+      if (shakeTimer > 0) {
+        const dx = (Math.random() - 0.5) * shakeIntensity;
+        const dy = (Math.random() - 0.5) * shakeIntensity;
+        ctx.translate(dx, dy);
+        shakeTimer -= dtFactor;
+      }
+
+      drawEnvironment(dtFactor);
+
+      player.update(dtFactor);
+      player.draw();
+
+      updateObstacles(dtFactor);
+      drawObstacles();
+
+      updatePowerups(dtFactor);
+      drawPowerups();
+
+      updateAndDrawFX(dtFactor);
+
+      ctx.restore();
+
+      animationFrameId = requestAnimationFrame(gameLoop);
+    }
+
+    function startGame() {
+      score = 0;
+      obstaclesDodged = 0;
+      lastMilestone = 0;
+      frameCount = 0;
+      lastTimestamp = 0;
+      gameSpeed = BASE_SPEED;
+      hudScoreEl.innerText = '0';
+
+      distanceSinceLastObstacle = 150;
+      nextObstacleGap = 420;
+      distanceSinceLastPowerup = 0;
+      nextPowerupGap = 1100;
+
+      obstacles.length = 0;
+      powerups.length = 0;
+      floatingTexts.length = 0;
+      particles.length = 0;
+      shockwaves.length = 0;
+
+      player.reset();
+      updatePowerHUD();
+
+      startScreen.classList.add('hidden');
+      gameoverScreen.classList.add('hidden');
+      mobileControls.classList.remove('hidden');
+      gameState = 'PLAYING';
+
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      animationFrameId = requestAnimationFrame(gameLoop);
+    }
+
+    // CORRECCIÓN DE SCROLL: Bloqueo global de desplazamiento en las teclas del juego
+    window.addEventListener('keydown', (e) => {
+      const gameKeys = ['Space', 'ArrowUp', 'ArrowDown', 'KeyW', 'KeyS', ' '];
+      if (gameKeys.includes(e.code) || gameKeys.includes(e.key)) {
+        e.preventDefault(); // Evita que la página se mueva
+      }
+
+      if (e.repeat) return;
+
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW' || e.key === ' ') {
+        if (gameState === 'PLAYING') {
+          player.requestJump();
+        } else if (gameState === 'START') {
+          startGame();
+        }
+      } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+        if (gameState === 'PLAYING') {
+          player.setDuck(true);
+        }
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW' || e.key === ' ') {
+        if (gameState === 'PLAYING') {
+          player.releaseJump();
+        }
+      } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+        if (gameState === 'PLAYING') {
+          player.setDuck(false);
+        }
+      }
+    });
+
+    let touchStartY = null;
+    let touchSwipedDown = false;
+
+    canvas.addEventListener('touchstart', (e) => {
+      if (gameState !== 'PLAYING') return;
+      const touch = e.touches[0];
+      touchStartY = touch.clientY;
+      touchSwipedDown = false;
+      player.requestJump();
+    }, { passive: true });
+
+    canvas.addEventListener('touchmove', (e) => {
+      if (gameState !== 'PLAYING' || touchStartY === null) return;
+      const deltaY = e.touches[0].clientY - touchStartY;
+      if (deltaY > 28 && !touchSwipedDown) {
+        touchSwipedDown = true;
+        player.releaseJump();
+        player.setDuck(true);
+      }
+    }, { passive: true });
+
+    canvas.addEventListener('touchend', () => {
+      if (gameState !== 'PLAYING') return;
+      player.releaseJump();
+      if (touchSwipedDown) {
+        player.setDuck(false);
+      }
+      touchStartY = null;
+      touchSwipedDown = false;
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      if (e.button !== 0) return;
+      if (gameState === 'PLAYING') {
+        player.requestJump();
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (gameState === 'PLAYING') {
+        player.releaseJump();
+      }
+    });
+
+    mobileJumpBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (gameState === 'PLAYING') player.requestJump();
+    });
+    mobileJumpBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (gameState === 'PLAYING') player.releaseJump();
+    });
+
+    mobileDuckBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (gameState === 'PLAYING') player.setDuck(true);
+    });
+    mobileDuckBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (gameState === 'PLAYING') player.setDuck(false);
+    });
+
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
+
+    drawEnvironment(0);
+    player.draw();
+  </script>
+</body>
+</html>

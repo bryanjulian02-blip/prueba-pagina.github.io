@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sección de Juegos - Backpack</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Galindo&family=Geologica:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    /* ==========================================================================
+       ESTILOS DEL MINIJUEGO: FILTRO INTELIGENTE (COMPLETO Y EXACTO)
+       ========================================================================== */
+    :root {
+      --bp-pink: #ff758c;
+      --bp-pink-dark: #f25278;
+      --bp-yellow: #ffc107;
+      --bp-orange: #ffaa3b;
+      --bp-blue: #51e5ff;
+      --bp-blue-dark: #0277bd;
+      --bp-cream: #fffbf9;
+      --cat-safe: #2ecc71;
+      --cat-safe-dark: #219653;
+      --cat-stop: #ff5271;
+      --cat-stop-dark: #c92a49;
+      --font-title: 'Galindo', cursive;
+      --font-body: 'Geologica', sans-serif;
+    }
+
+    #bp-game-root {
+      position: relative;
+      width: 100%;
+      height: 600px;
+      background: linear-gradient(160deg, #51e5ff 0%, #a6f0ff 52%, #fffbf9 100%);
+      border-radius: 22px;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto auto auto 1fr auto;
+      gap: 8px;
+      padding: 12px 16px;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.18);
+    }
+
+    #bp-game-root.shake {
+      animation: screenShake 0.35s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes screenShake {
+      10%, 90% { transform: translate3d(-3px, 0, 0); }
+      20%, 80% { transform: translate3d(5px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+      40%, 60% { transform: translate3d(6px, 0, 0); }
+    }
+
+    #screen-flash {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 38;
+      border-radius: 22px;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    #fx-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 40;
+    }
+
+    .hud-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      z-index: 15;
+    }
+
+    .hud-pill {
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 50px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.09);
+      border: 2px solid #ffffff;
+      flex-shrink: 0;
+    }
+
+    .hud-lbl {
+      font-family: var(--font-title);
+      font-size: 0.68rem;
+      color: var(--bp-pink-dark);
+      text-transform: uppercase;
+      display: block;
+      line-height: 1;
+    }
+
+    .hud-val {
+      font-family: var(--font-title);
+      font-size: 1.15rem;
+      color: var(--bp-blue-dark);
+      line-height: 1.1;
+      display: inline-block;
+    }
+
+    .hud-val.bump {
+      animation: scoreBump 0.28s ease;
+    }
+
+    @keyframes scoreBump {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); color: #ff758c; }
+      100% { transform: scale(1); }
+    }
+
+    .streak-pill {
+      background: var(--bp-yellow);
+      color: #222;
+      font-family: var(--font-title);
+      font-size: 0.78rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .streak-pill.fire {
+      background: linear-gradient(90deg, #ff758c, #ffc107);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(255, 117, 140, 0.65);
+    }
+
+    .level-pill {
+      background: linear-gradient(135deg, #0277bd, #51e5ff);
+      color: #fff;
+      font-family: var(--font-title);
+      font-size: 0.76rem;
+      padding: 4px 11px;
+      border-radius: 20px;
+      box-shadow: 0 2px 6px rgba(2, 119, 189, 0.25);
+    }
+
+    #status-feedback-bar {
+      flex-grow: 1;
+      min-width: 180px;
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 50px;
+      padding: 7px 16px;
+      border: 3px solid var(--bp-blue);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-align: center;
+      transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    #status-feedback-bar.pop {
+      animation: barPop 0.3s ease;
+    }
+
+    @keyframes barPop {
+      0% { transform: scale(0.97); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    #status-feedback-icon {
+      font-size: 1.2rem;
+      color: var(--bp-blue-dark);
+      flex-shrink: 0;
+    }
+
+    #status-feedback-text {
+      font-size: 0.84rem;
+      font-weight: 800;
+      color: #222;
+      line-height: 1.2;
+    }
+
+    .hud-icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: #ffffff;
+      color: var(--bp-pink-dark);
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      transition: transform 0.15s ease;
+      flex-shrink: 0;
+    }
+    .hud-icon-btn:hover { transform: scale(1.08); }
+
+    .life-hero-row {
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 18px;
+      padding: 7px 16px;
+      border: 3px solid #ffffff;
+      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.09);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 15;
+    }
+
+    .life-hero-row.danger {
+      border-color: #ff5271;
+      box-shadow: 0 0 16px rgba(255, 82, 113, 0.55);
+      animation: dangerPulse 0.8s infinite alternate;
+    }
+
+    @keyframes dangerPulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.008); }
+    }
+
+    .life-heart-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff758c, #f25278);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+      box-shadow: 0 3px 8px rgba(242, 82, 120, 0.35);
+      animation: heartBeat 1.4s infinite ease-in-out;
+    }
+
+    @keyframes heartBeat {
+      0%, 100% { transform: scale(1); }
+      15% { transform: scale(1.14); }
+      30% { transform: scale(1); }
+      45% { transform: scale(1.1); }
+    }
+
+    .life-title-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .life-title { font-family: var(--font-title); font-size: 0.84rem; color: #222; letter-spacing: 0.3px; }
+
+    .life-track-hero {
+      position: relative;
+      flex-grow: 1;
+      height: 18px;
+      background: #e9ecef;
+      border-radius: 50px;
+      overflow: hidden;
+      border: 2px solid #dfe6e9;
+    }
+
+    .life-fill-hero {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #2ecc71 0%, #00d2d3 100%);
+      border-radius: 50px;
+      transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .life-percent-badge {
+      font-family: var(--font-title);
+      font-size: 0.95rem;
+      color: #219653;
+      background: #eafaf1;
+      padding: 2px 12px;
+      border-radius: 20px;
+      border: 2px solid #2ecc71;
+      flex-shrink: 0;
+      min-width: 64px;
+      text-align: center;
+    }
+
+    .powers-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      z-index: 15;
+    }
+
+    .energy-pill {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 50px;
+      padding: 5px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+      min-width: 185px;
+      border: 2px solid #fff;
+    }
+
+    .energy-pill.full {
+      border-color: var(--bp-yellow);
+      box-shadow: 0 0 14px rgba(255, 193, 7, 0.75);
+    }
+
+    .energy-track { flex-grow: 1; height: 11px; background: #ffe8cc; border-radius: 10px; overflow: hidden; }
+    .energy-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffaa3b, #ffc107); border-radius: 10px; }
+
+    .guardians-list { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+    .guardian-btn {
+      background: #ffffff;
+      border: 2px solid #e6e6e6;
+      border-radius: 18px;
+      padding: 4px 10px 4px 5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      opacity: 0.62;
+      transition: transform 0.15s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.07);
+    }
+
+    .guardian-btn.ready {
+      opacity: 1;
+      border-color: var(--bp-yellow);
+      background: #fffdf2;
+      box-shadow: 0 0 14px rgba(255, 193, 7, 0.85);
+      animation: pulseReady 0.9s infinite alternate;
+    }
+
+    @keyframes pulseReady {
+      from { transform: scale(1); }
+      to { transform: scale(1.05); }
+    }
+
+    .guardian-avatar { width: 28px; height: 28px; border-radius: 50%; color: #fff; font-family: var(--font-title); font-size: 0.8rem; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+    .guardian-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .guardian-meta { text-align: left; line-height: 1.05; }
+    .guardian-name { font-family: var(--font-title); font-size: 0.75rem; color: #222; display: block; }
+    .guardian-desc { font-size: 0.64rem; font-weight: 700; color: #666; }
+
+    .conveyor-area {
+      position: relative;
+      background: rgba(255, 255, 255, 0.66);
+      border: 3px dashed #ffffff;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .conveyor-area.frozen { background: rgba(209, 245, 255, 0.85); border-color: #0288d1; }
+
+    .belt-hints {
+      position: absolute;
+      bottom: 28px;
+      left: 24px;
+      right: 24px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      opacity: 0.45;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .belt-hint-safe { color: #219653; }
+    .belt-hint-stop { color: #c92a49; }
+
+    .conveyor-track {
+      position: absolute;
+      bottom: 10px;
+      left: 16px;
+      right: 16px;
+      height: 14px;
+      border-radius: 20px;
+      background: repeating-linear-gradient(90deg, #ffaa3b 0px, #ffaa3b 22px, #ffc107 22px, #ffc107 44px);
+      background-size: 44px 100%;
+      animation: moveBelt 0.85s linear infinite;
+    }
+
+    @keyframes moveBelt {
+      from { background-position: 0 0; }
+      to { background-position: 44px 0; }
+    }
+
+    .belt-danger-edge {
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 48px;
+      background: linear-gradient(90deg, transparent, rgba(255, 82, 113, 0.22));
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 82, 113, 0.55);
+      font-size: 1.3rem;
+    }
+
+    .msg-card {
+      position: absolute;
+      top: 48%;
+      transform: translateY(-54%);
+      width: 270px;
+      min-height: 132px;
+      background: #ffffff;
+      border-radius: 22px;
+      padding: 12px 15px;
+      border: 3px solid #ffffff;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
+      cursor: grab;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 12;
+    }
+
+    .msg-card.selected { border-color: var(--bp-pink); box-shadow: 0 0 0 4px rgba(255, 117, 140, 0.35); z-index: 18; }
+    .msg-card.tilt-safe { border-color: var(--cat-safe) !important; background: #f2fff7 !important; }
+    .msg-card.tilt-stop { border-color: var(--cat-stop) !important; background: #fff3f6 !important; }
+    .msg-card.clue-on { border-color: var(--bp-yellow); background: #fffdf4; }
+
+    .msg-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .msg-topic { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; background: #e1f5fe; color: var(--bp-blue-dark); padding: 2px 10px; border-radius: 12px; }
+    .msg-special { font-size: 0.7rem; font-weight: 800; background: var(--bp-yellow); color: #222; padding: 2px 8px; border-radius: 12px; }
+    .msg-card-main { display: flex; align-items: center; gap: 10px; }
+    .msg-icon { width: 42px; height: 42px; border-radius: 14px; background: #fff3e0; color: var(--bp-orange); font-size: 1.35rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .msg-text { font-size: 0.92rem; font-weight: 800; color: #222222; line-height: 1.28; }
+    .msg-clue { margin-top: 6px; font-size: 0.74rem; font-weight: 700; color: #d35400; background: #fff8e1; padding: 3px 8px; border-radius: 8px; display: none; }
+    .msg-card.clue-on .msg-clue { display: block; }
+
+    .floating-callout {
+      position: absolute;
+      font-family: var(--font-title);
+      font-size: 1.25rem;
+      pointer-events: none;
+      z-index: 45;
+      text-shadow: 0 2px 0 #fff, 0 -2px 0 #fff, 2px 0 0 #fff, -2px 0 0 #fff;
+      animation: floatUpCallout 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes floatUpCallout {
+      0% { opacity: 0; transform: translate(-50%, 0) scale(0.6); }
+      20% { opacity: 1; transform: translate(-50%, -14px) scale(1.15); }
+      100% { opacity: 0; transform: translate(-50%, -62px) scale(0.95); }
+    }
+
+    .zones-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; z-index: 15; }
+
+    .drop-zone {
+      position: relative;
+      border-radius: 22px;
+      border: 3px dashed rgba(255, 255, 255, 0.95);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.12), 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .zone-safe { background: linear-gradient(180deg, #2ecc71 0%, #219653 100%); color: #ffffff; }
+    .zone-stop { background: linear-gradient(180deg, #ff6b8b 0%, #d63056 100%); color: #ffffff; }
+    .zone-icon { font-size: 2rem; line-height: 1; }
+    .zone-texts { text-align: left; }
+    .zone-title { font-family: var(--font-title); font-size: 1.25rem; line-height: 1.1; }
+    .zone-sub { font-size: 0.78rem; font-weight: 700; opacity: 0.95; }
+    .zone-key { position: absolute; top: 8px; right: 12px; background: rgba(255, 255, 255, 0.28); border-radius: 8px; padding: 2px 8px; font-family: var(--font-title); font-size: 0.78rem; }
+
+    .overlay-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 35;
+      background: rgba(255, 251, 249, 0.97);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 28px;
+      text-align: center;
+    }
+
+    .overlay-screen.hidden { display: none !important; }
+
+    .ov-title { font-family: var(--font-title); color: var(--bp-pink-dark); font-size: clamp(1.6rem, 3vw, 2.3rem); margin-bottom: 4px; }
+    .ov-sub { font-family: var(--font-title); color: var(--bp-orange); font-size: 1.05rem; margin-bottom: 10px; }
+    .ov-desc { font-size: 0.92rem; font-weight: 700; color: #555; max-width: 600px; margin-bottom: 14px; line-height: 1.35; }
+
+    .cast-strip { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 16px; }
+
+    .cast-chip {
+      background: #ffffff; border: 2px solid #ffe8cc; border-radius: 50px;
+      padding: 5px 14px 5px 6px; display: flex; align-items: center; gap: 8px;
+    }
+
+    .cast-chip-avatar { width: 30px; height: 30px; border-radius: 50%; color: #fff; font-family: var(--font-title); font-size: 0.85rem; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .cast-chip-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .cast-chip-name { font-family: var(--font-title); font-size: 0.85rem; color: #222; }
+
+    .btn-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+    .btn-bp-main {
+      font-family: var(--font-title); background: var(--bp-pink); color: #fff;
+      border: none; border-radius: 50px; padding: 12px 32px; font-size: 1.15rem;
+      box-shadow: 0 5px 0 #d63056; cursor: pointer;
+    }
+    .btn-bp-main:hover { background: #ff5271; }
+
+    .btn-bp-alt {
+      font-family: var(--font-title); background: #ffffff; color: var(--bp-blue-dark);
+      border: 2px solid var(--bp-blue); border-radius: 50px; padding: 10px 24px; font-size: 0.98rem; cursor: pointer;
+    }
+
+    .howto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 660px; margin-bottom: 16px; }
+    .howto-card { border-radius: 20px; padding: 14px; color: #fff; text-align: center; }
+    .howto-card.safe { background: var(--cat-safe); }
+    .howto-card.stop { background: var(--cat-stop); }
+    .howto-card h4 { font-family: var(--font-title); font-size: 1.1rem; margin: 4px 0; }
+    .howto-card p { font-size: 0.82rem; font-weight: 700; line-height: 1.25; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 680px; margin-bottom: 14px; }
+    .stat-card { background: #ffffff; border: 2px solid #ffe8cc; border-radius: 18px; padding: 10px; }
+    .stat-card span { display: block; font-size: 0.68rem; font-weight: 800; color: #777; }
+    .stat-card strong { font-family: var(--font-title); font-size: 1.35rem; color: var(--bp-blue-dark); }
+
+    .learning-scroll {
+      width: 100%; max-width: 680px; max-height: 220px; overflow-y: auto;
+      background: #ffffff; border: 2px solid #ffe8cc; border-radius: 18px;
+      padding: 12px 16px; text-align: left; margin-bottom: 14px;
+    }
+    .learn-item { border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; margin-bottom: 8px; }
+
+    .badge-chip {
+      display: inline-flex; align-items: center; gap: 6px; background: #fff8e1;
+      border: 2px solid var(--bp-yellow); border-radius: 20px; padding: 4px 12px;
+      font-size: 0.78rem; font-weight: 800; color: #333; margin: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER ESTILO PÍLDORA -->
+  <header class="custom-header">
+    <div class="container">
+      <nav class="navbar navbar-expand-lg navbar-pill">
+        <div class="container-fluid align-items-center px-2">
+          
+          <a class="navbar-brand me-0 me-lg-4 d-flex align-items-center" href="Inicio.html">
+            <img src="imagenes/logo final 1.png" alt="Logo Mochila" class="header-logo">
+          </a>
+
+          <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse align-items-center" id="navbarContent">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-2 gap-lg-4 text-center align-items-center">
+              <li class="nav-item">
+                <a class="nav-link nav-custom-link" href="Inicio.html">Inicio</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link nav-custom-link" href="Animaciones.html">Animaciones</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link nav-custom-link nav-active-yellow" href="index_juego.html">Juego</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link nav-custom-link" href="Merch.html">Merch</a>
+              </li>
+            </ul>
+
+            <div class="d-flex justify-content-center justify-content-lg-end align-items-center mt-2 mt-lg-0">
+              <button class="btn btn-login" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">
+                Iniciar sesión
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="container my-4">
+    
+    <h1 class="game-section-title mb-3">BACKPACK - Patio de juegos</h1>
+
+    <!-- CONTENEDOR DEL MINIJUEGO: FILTRO INTELIGENTE (COMPLETO) -->
+    <div class="game-card-wrapper p-3 p-md-4 mb-4">
+      <div id="bp-game-root" role="application" aria-label="Filtro Inteligente: Guardianes de Backpack">
+        <div id="screen-flash"></div>
+        <canvas id="fx-canvas"></canvas>
+
+        <!-- FILA 1 -->
+        <div class="hud-top-row">
+          <div class="hud-pill">
+            <div>
+              <span class="hud-lbl">Puntos</span>
+              <span class="hud-val" id="hud-score">0</span>
+            </div>
+            <span class="streak-pill" id="hud-streak">×1</span>
+            <span class="level-pill" id="hud-level">Nivel 1</span>
+          </div>
+
+          <div id="status-feedback-bar" aria-live="polite">
+            <i class="bi bi-shield-check" id="status-feedback-icon"></i>
+            <span id="status-feedback-text">¡Arrastra el mensaje o pulsa A (Seguro) / D (Detener)!</span>
+          </div>
+
+          <button class="hud-icon-btn" id="btn-sound" title="Sonido"><i class="bi bi-volume-up-fill" id="icon-sound"></i></button>
+          <button class="hud-icon-btn" id="btn-pause" title="Pausa (Esc)"><i class="bi bi-pause-fill"></i></button>
+        </div>
+
+        <!-- FILA 2 -->
+        <div class="life-hero-row" id="life-hero-row">
+          <div class="life-heart-badge"><i class="bi bi-heart-fill"></i></div>
+          <div class="life-title-wrap">
+            <span class="life-title">VIDA DE LA COMUNIDAD</span>
+          </div>
+          <div class="life-track-hero">
+            <div class="life-fill-hero" id="hud-health-bar"></div>
+          </div>
+          <div class="life-percent-badge" id="hud-health-txt">100%</div>
+        </div>
+
+        <!-- FILA 3 -->
+        <div class="powers-row">
+          <div class="energy-pill" id="energy-pill-box" title="Acierta mensajes para activar un Guardián">
+            <i class="bi bi-lightning-charge-fill" style="color:#ffaa3b; font-size:1.15rem;"></i>
+            <div style="flex-grow:1;">
+              <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-weight:800; color:#555; margin-bottom:2px;">
+                <span>PODER EQUIPO</span>
+                <span id="hud-energy-txt">0%</span>
+              </div>
+              <div class="energy-track">
+                <div class="energy-fill" id="hud-energy-bar"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="guardians-list" id="guardians-bar"></div>
+        </div>
+
+        <!-- FILA 4 -->
+        <div class="conveyor-area" id="conveyor-area">
+          <div class="belt-hints">
+            <span class="belt-hint-safe"><i class="bi bi-arrow-down-left"></i> SEGURO (Tecla A)</span>
+            <span class="belt-hint-stop">DETENER (Tecla D) <i class="bi bi-arrow-down-right"></i></span>
+          </div>
+          <div class="belt-danger-edge" title="¡Clasifica el mensaje antes de que llegue aquí!"><i class="bi bi-exclamation-diamond-fill"></i></div>
+          <div class="conveyor-track"></div>
+        </div>
+
+        <!-- FILA 5 -->
+        <div class="zones-grid">
+          <div class="drop-zone zone-safe" id="zone-seguro" data-cat="seguro" role="button" tabindex="0">
+            <span class="zone-key">A / ←</span>
+            <div class="zone-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="zone-texts">
+              <div class="zone-title">SEGURO</div>
+              <div class="zone-sub">Es amable, sano y respetuoso</div>
+            </div>
+          </div>
+
+          <div class="drop-zone zone-stop" id="zone-detener" data-cat="detener" role="button" tabindex="0">
+            <span class="zone-key">D / →</span>
+            <div class="zone-icon"><i class="bi bi-sign-stop-fill"></i></div>
+            <div class="zone-texts">
+              <div class="zone-title">DETENER</div>
+              <div class="zone-sub">Riesgo, engaño o falta de respeto</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANTALLA INICIO -->
+        <div class="overlay-screen" id="scr-menu">
+          <div class="ov-title">FILTRO INTELIGENTE</div>
+          <div class="ov-sub">Guardianes de Backpack • ¡Protege tu mundo digital!</div>
+          <p class="ov-desc">
+            Lee cada mensaje que llega por la cinta y decide junto a <strong>Ian, Mia, Tiago, Lulu y Pan</strong> si es <strong>SEGURO</strong> para la comunidad o si debes <strong>DETENERLO</strong> y pedir ayuda.
+          </p>
+
+          <div class="cast-strip" id="menu-cast"></div>
+
+          <div class="btn-row">
+            <button class="btn-bp-main" id="btn-play"><i class="bi bi-play-fill"></i> ¡JUGAR AHORA!</button>
+            <button class="btn-bp-alt" id="btn-howto"><i class="bi bi-question-circle-fill"></i> ¿CÓMO SE JUEGA?</button>
+          </div>
+        </div>
+
+        <!-- PANTALLA INSTRUCCIONES -->
+        <div class="overlay-screen hidden" id="scr-howto">
+          <div class="ov-title" style="font-size:1.75rem;">¿CÓMO JUGAR?</div>
+          <p class="ov-desc">
+            Arrastra la tarjeta hacia abajo, haz clic en el botón correspondiente o usa las teclas <strong>A</strong> y <strong>D</strong>.
+          </p>
+
+          <div class="howto-grid">
+            <div class="howto-card safe">
+              <i class="bi bi-check-circle-fill" style="font-size:1.8rem;"></i>
+              <h4>SEGURO (Tecla A)</h4>
+              <p>Mensajes amables, apoyo entre amigos, creatividad y consejos sanos sin pedir datos privados.</p>
+            </div>
+            <div class="howto-card stop">
+              <i class="bi bi-sign-stop-fill" style="font-size:1.8rem;"></i>
+              <h4>DETENER (Tecla D)</h4>
+              <p>Burlas, pedir contraseñas o fotos, regalos falsos, retos peligrosos o enlaces sospechosos.</p>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-bp-main" id="btn-tutorial"><i class="bi bi-controller"></i> PRACTICAR (2 EJEMPLOS)</button>
+            <button class="btn-bp-alt" id="btn-skip-tut">¡EMPEZAR PARTIDA!</button>
+          </div>
+        </div>
+
+        <!-- PANTALLA PAUSA -->
+        <div class="overlay-screen hidden" id="scr-pause">
+          <div class="ov-title">PAUSA</div>
+          <p class="ov-desc">La cinta transportadora está detenida. ¡Cuando estés listo seguimos protegiendo Backpack!</p>
+          <div class="btn-row">
+            <button class="btn-bp-main" id="btn-resume"><i class="bi bi-play-fill"></i> CONTINUAR</button>
+            <button class="btn-bp-alt" id="btn-restart"><i class="bi bi-arrow-clockwise"></i> REINICIAR</button>
+            <button class="btn-bp-alt" id="btn-home"><i class="bi bi-house-fill"></i> INICIO</button>
+          </div>
+        </div>
+
+        <!-- PANTALLA RESULTADOS -->
+        <div class="overlay-screen hidden" id="scr-results">
+          <div class="ov-title">¡BUEN TRABAJO, GUARDIÁN!</div>
+          <div class="ov-sub" id="res-msg">¡Cada decisión inteligente hace internet más seguro!</div>
+
+          <div class="stats-grid">
+            <div class="stat-card"><span>PUNTOS</span><strong id="res-score">0</strong></div>
+            <div class="stat-card"><span>MEJOR RACHA</span><strong id="res-streak">0</strong></div>
+            <div class="stat-card"><span>ACIERTOS</span><strong id="res-acc">0%</strong></div>
+            <div class="stat-card"><span>RÉCORD</span><strong id="res-best">0</strong></div>
+          </div>
+
+          <div id="res-badges" style="margin-bottom:12px;"></div>
+
+          <div class="btn-row">
+            <button class="btn-bp-main" id="btn-again"><i class="bi bi-arrow-repeat"></i> JUGAR DE NUEVO</button>
+            <button class="btn-bp-alt" id="btn-learn"><i class="bi bi-lightbulb-fill" style="color:#ffc107;"></i> LO QUE APRENDÍ</button>
+            <button class="btn-bp-alt" id="btn-res-home">INICIO</button>
+          </div>
+        </div>
+
+        <!-- PANTALLA APRENDIZAJE -->
+        <div class="overlay-screen hidden" id="scr-learning">
+          <div class="ov-title" style="font-size:1.65rem;">LO QUE APRENDÍ HOY</div>
+          <p class="ov-desc" style="margin-bottom:8px;">Repasa los mensajes en los que tuviste dudas para volverte un experto digital:</p>
+
+          <div class="learning-scroll" id="learning-list"></div>
+
+          <div class="btn-row">
+            <button class="btn-bp-main" id="btn-learn-play"><i class="bi bi-play-fill"></i> JUGAR OTRA VEZ</button>
+            <button class="btn-bp-alt" id="btn-learn-back">VOLVER</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN DE CONTROLES E INFORMACIÓN -->
+    <div class="row text-white mt-4 align-items-center">
+      <div class="col-12 col-md-5 col-lg-4 mb-4 mb-md-0">
+        <h3 class="info-subtitle mb-3">Controles</h3>
+        <div class="d-flex align-items-center justify-content-start">
+          <svg class="controls-illustration" viewBox="0 0 310 110" xmlns="http://www.w3.org/2000/svg">
+            <rect x="5" y="10" width="210" height="90" rx="10" fill="#ffffff" stroke="#2b2d42" stroke-width="3"/>
+            <rect x="15" y="18" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="33" y="18" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="51" y="18" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="69" y="18" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="87" y="18" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="105" y="18" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="123" y="18" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="141" y="18" width="35" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+
+            <rect x="15" y="32" width="18" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="37" y="32" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="55" y="32" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="73" y="32" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="91" y="32" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="109" y="32" width="14" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+            <rect x="127" y="32" width="49" height="10" rx="2" fill="#e0e0e0" stroke="#2b2d42" stroke-width="1"/>
+
+            <rect x="15" y="58" width="82" height="24" rx="5" fill="#2ecc71" stroke="#2b2d42" stroke-width="2"/>
+            <text x="56" y="74" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">TECLA A / ←</text>
+
+            <rect x="108" y="58" width="82" height="24" rx="5" fill="#ff5271" stroke="#2b2d42" stroke-width="2"/>
+            <text x="149" y="74" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">TECLA D / →</text>
+
+            <rect x="235" y="18" width="45" height="74" rx="22" fill="#ffffff" stroke="#2b2d42" stroke-width="3"/>
+            <line x1="257.5" y1="18" x2="257.5" y2="48" stroke="#2b2d42" stroke-width="2"/>
+            <rect x="253" y="25" width="9" height="15" rx="4" fill="#aa00ff" stroke="#2b2d42" stroke-width="1.2"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-7 col-lg-8">
+        <h3 class="info-subtitle mb-2">Acerca de: Filtro Inteligente</h3>
+        <p class="info-description">
+          ¿Puedes ayudar a la pandilla a proteger el ciberespacio? La mochila los desafía de nuevo con mensajes en la cinta transportadora. Junto a Ian, Mia, Tiago, Lulú y Pan, toma decisiones rápidas, resuelve qué mensajes son seguros y cuáles debes detener[cite: 9]. Cada elección cuenta. ¿Estás listo para jugar con inteligencia?
+        </p>
+      </div>
+    </div>
+
+    <!-- SECCIÓN DE COMENTARIOS COMPLETA -->
+    <section class="comments-section mt-5">
+      <h2 class="comments-title mb-3">COMENTA</h2>
+      <div class="mb-4">
+        <textarea class="form-control comment-input" rows="4" placeholder="Califícanos"></textarea>
+      </div>
+      <div class="d-flex flex-column gap-3">
+        <div class="comment-card d-flex align-items-center p-3 p-md-4">
+          <img src="imagenes/perfil.png" alt="Perfil" class="comment-avatar me-3 me-md-4">
+          <div>
+            <h5 class="comment-username mb-1">User_Name</h5>
+            <p class="comment-text mb-0">Súper chévere el juego, me identifico mucho con Leja</p>
+          </div>
+        </div>
+        <div class="comment-card d-flex align-items-center p-3 p-md-4">
+          <img src="imagenes/perfil.png" alt="Perfil" class="comment-avatar me-3 me-md-4">
+          <div>
+            <h5 class="comment-username mb-1">User_Name</h5>
+            <p class="comment-text mb-0">¿Cómo hago para poder cambiarle la ropa a mi personaje? Tengo a bry</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERIE ANIMADA COMPLETA -->
+    <section class="series-section my-5">
+      <h2 class="series-title mb-4">Serie animada</h2>
+      <div class="row g-4">
+        <div class="col-12 col-md-6">
+          <div class="episode-card position-relative p-3 p-md-4 h-100 overflow-hidden">
+            <div class="card-default-content">
+              <div class="thumbnail-wrapper mb-3">
+                <img src="imagenes/miniatura.png" alt="E1 - Patio de juegos" class="episode-thumbnail">
+                <span class="badge-duration">3min</span>
+              </div>
+              <span class="episode-brand d-block mb-1">BACKPACK</span>
+              <h4 class="episode-title mb-1">E1 - Patio de juegos</h4>
+              <span class="episode-subtitle d-block">Sub Español (America Latina)</span>
+            </div>
+
+            <div class="card-hover-overlay p-4 d-flex flex-column justify-content-between">
+              <div>
+                <span class="episode-brand d-block mb-1">BACKPACK</span>
+                <h4 class="episode-title mb-3">E1 - Patio de juegos</h4>
+                <p class="episode-description">
+                  Cuando un grupo de cinco amigos encuentra una vieja mochila abandonada en el patio del colegio...
+                </p>
+              </div>
+              <div>
+                <div class="episode-date d-flex align-items-center mb-3">
+                  <svg class="me-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <span>25/10/2026</span>
+                </div>
+                <a href="index_ver_capitulos.html" class="btn-play-now d-inline-flex align-items-center text-decoration-none">
+                  <svg class="me-2" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                  <span>Reproducir ahora</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="episode-card position-relative p-3 p-md-4 h-100 overflow-hidden">
+            <div class="card-default-content">
+              <div class="thumbnail-wrapper mb-3">
+                <img src="imagenes/miniatura.png" alt="E2" class="episode-thumbnail">
+                <span class="badge-duration">3min</span>
+              </div>
+              <span class="episode-brand d-block mb-1">BACKPACK</span>
+              <h4 class="episode-title mb-1">E2 - Título de la animación</h4>
+              <span class="episode-subtitle d-block">Sub Español (America Latina)</span>
+            </div>
+
+            <div class="card-hover-overlay p-4 d-flex flex-column justify-content-between">
+              <div>
+                <span class="episode-brand d-block mb-1">BACKPACK</span>
+                <h4 class="episode-title mb-3">E2 - Título de la animación</h4>
+                <p class="episode-description">
+                  Acompaña al grupo a descubrir los secretos ocultos dentro de la mochila y cómo aprenderán a usar la tecnología a su favor.
+                </p>
+              </div>
+              <div>
+                <div class="episode-date d-flex align-items-center mb-3">
+                  <svg class="me-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <span>25/10/2026</span>
+                </div>
+                <a href="index_ver_capitulos.html" class="btn-play-now d-inline-flex align-items-center text-decoration-none">
+                  <svg class="me-2" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                  <span>Reproducir ahora</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="custom-footer w-100 py-5 text-center">
+    <div class="container d-flex flex-column align-items-center">
+      <ul class="list-inline mb-4 footer-links d-flex flex-wrap justify-content-center gap-3 gap-md-4">
+        <li class="list-inline-item"><a href="#" class="footer-link">Términos y condiciones</a></li>
+        <li class="list-inline-item"><a href="#" class="footer-link">Política de privacidad</a></li>
+        <li class="list-inline-item"><a href="#" class="footer-link">Subtitulado</a></li>
+        <li class="list-inline-item"><a href="#" class="footer-link">Cumplimiento de derechos de autor</a></li>
+      </ul>
+      <div class="footer-logo-wrapper mb-4">
+        <img src="imagenes/logo final 1.png" alt="Backpack Logo" class="footer-logo">
+      </div>
+      <div class="d-flex justify-content-center gap-3 mb-4">
+        <a href="#" class="social-icon-btn d-flex align-items-center justify-content-center" aria-label="YouTube"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+        <a href="#" class="social-icon-btn d-flex align-items-center justify-content-center" aria-label="Instagram"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+        <a href="#" class="social-icon-btn d-flex align-items-center justify-content-center" aria-label="TikTok"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525 0h3.08c.12 1.052.7 2.055 1.637 2.673 1.026.68 2.261.93 3.478.932v3.295c-1.35-.04-2.69-.427-3.83-1.125-.13-.08-.258-.166-.381-.258v7.625c0 3.328-2.67 6.028-5.968 6.028-3.297 0-5.968-2.7-5.968-6.028 0-3.327 2.671-6.027 5.968-6.027.382 0 .759.036 1.125.105v3.315c-.366-.115-.75-.175-1.125-.175-1.5 0-2.715 1.215-2.715 2.715 0 1.5 1.215 2.715 2.715 2.715 1.5 0 2.715-1.215 2.715-2.715V0z"/></svg></a>
+      </div>
+      <p class="copyright-text mb-0">
+        © 2026 Viacom International Inc. Backpack and all related titles, logos and characters are trademarks of Backpack inc. All Rights Reserved
+      </p>
+    </div>
+  </footer>
+
+  <!-- MODAL DE INICIO DE SESIÓN -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered login-modal-dialog">
+      <div class="modal-content login-modal-content-custom overflow-hidden">
+        <div class="login-pink-box d-flex align-items-center justify-content-center position-relative overflow-hidden">
+          <div class="login-white-card bg-white position-relative">
+            <button type="button" class="btn-back-link border-0 bg-transparent p-0 mb-1" data-bs-dismiss="modal">
+              Atras
+            </button>
+            <div class="row align-items-center g-2">
+              <div class="col-12 col-sm-5 text-center">
+                <div class="login-avatar-circle mx-auto mb-1">
+                  <img src="imagenes/perfil.png" alt="Perfil Avatar" class="login-avatar-img">
+                </div>
+                <h2 class="login-card-title mb-0">INICIAR SESIÓN</h2>
+              </div>
+              <div class="col-12 col-sm-7">
+                <form>
+                  <div class="mb-2">
+                    <label for="loginEmail" class="form-label login-label ms-1">Email</label>
+                    <input type="email" class="form-control custom-login-input" id="loginEmail" placeholder="escribe aqui...">
+                  </div>
+                  <div class="mb-1 position-relative">
+                    <label for="loginPassword" class="form-label login-label ms-1">Contraseña</label>
+                    <div class="position-relative">
+                      <input type="password" class="form-control custom-login-input pe-4" id="loginPassword" placeholder="escribe aqui...">
+                      <button type="button" class="btn-toggle-eye position-absolute top-50 end-0 translate-middle-y me-2 border-0 bg-transparent p-0">
+                        <svg width="14" height="14" fill="#555" viewBox="0 0 16 16">
+                          <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+                          <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <div class="text-center mt-3">
+              <button type="button" class="btn btn-orange-submit px-4 py-1 mb-2">ENTRAR</button>
+              <div class="d-flex flex-column gap-1">
+                <a href="#" class="login-secondary-link">REGISTRARSE</a>
+                <a href="#" class="login-secondary-link">OLVIDÓ LA CONTRASEÑA</a>
+              </div>
+            </div>
+          </div>
+          <img src="imagenes/lulu 2.png" alt="Personaje Pelirroja" class="char-overlay char-bottom-left">
+          <img src="imagenes/pan 2.png" alt="Personaje Rubia" class="char-overlay char-bottom-right">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- LÓGICA COMPLETA Y ORIGINAL DEL JUEGO CON LAS +110 FRASES Y EFECTOS VISUALES -->
+  <script>
+    const CONFIG = {
+      initialHealth: 100,
+      basePoints: 100,
+      energyPerHit: 20,
+      cardGapPx: 295,
+      characters: [
+        { id: "ian",   name: "Ian",   key: "1", color: "#0288d1", img: "imagenes/ian peluche.png",   short: "Pausa 5s" },
+        { id: "mia",   name: "Mia",   key: "2", color: "#00acc1", img: "imagenes/mia peluche.png",   short: "Puntos ×2" },
+        { id: "tiago", name: "Tiago", key: "3", color: "#8d6e63", img: "imagenes/tiago peluche.png", short: "+25 Vida" },
+        { id: "lulu",  name: "Lulu",  key: "4", color: "#ec407a", img: "imagenes/lulu peluche.png",  short: "Ver pista" },
+        { id: "pan",   name: "Pan",   key: "5", color: "#ffb300", img: "imagenes/pan peluche.png",   short: "Alerta roja" }
+      ]
+    };
+
+    const CardDeck = (() => {
+      const items = [
+        { lvl: 1, text: "¡Qué genial quedó tu dibujo para la clase!", category: "seguro", topic: "Amistad", icon: "bi-palette-fill", clue: "Mensaje amable y positivo.", exp: "Felicitar a otros hace que la comunidad sea divertida y segura." },
+        { lvl: 1, text: "¿Estudiamos juntos para el examen de mañana?", category: "seguro", topic: "Estudio", icon: "bi-book-fill", clue: "Invitación sana entre compañeros.", exp: "Ayudarse con las tareas es un uso positivo de internet." },
+        { lvl: 1, text: "¡Buena partida! Jugaste súper bien hoy.", category: "seguro", topic: "Juego limpio", icon: "bi-trophy-fill", clue: "Respeto incluso al competir.", exp: "El juego limpio demuestra gran compañerismo." },
+        { lvl: 1, text: "Gracias por explicarme cómo pasar ese nivel.", category: "seguro", topic: "Gratitud", icon: "bi-emoji-smile-fill", clue: "Agradecimiento respetuoso.", exp: "Dar las gracias crea un ambiente amigable en línea." },
+        { lvl: 1, text: "Mira la foto de mi perrito dormido en su cojín.", category: "seguro", topic: "Mascotas", icon: "bi-heart-fill", clue: "Foto linda sin datos privados.", exp: "Compartir fotos de mascotas sin mostrar tu dirección es seguro." },
+        { lvl: 1, text: "¡Ánimo! En la siguiente ronda lo logramos.", category: "seguro", topic: "Equipo", icon: "bi-hand-thumbs-up-fill", clue: "Apoyo positivo al equipo.", exp: "Animar a tus amigos fortalece la amistad." },
+        { lvl: 1, text: "Me gustó mucho tu cuento de aventuras.", category: "seguro", topic: "Creatividad", icon: "bi-stars", clue: "Comentario constructivo.", exp: "Apoyar la creatividad de los demás es genial." },
+        { lvl: 1, text: "Hoy descansé la vista y salí a jugar al parque.", category: "seguro", topic: "Bienestar", icon: "bi-sun-fill", clue: "Equilibrio entre pantallas y juego.", exp: "Descansar de las pantallas cuida tu salud y energía." },
+        { lvl: 1, text: "Apagué el celular antes de dormir para descansar.", category: "seguro", topic: "Descanso", icon: "bi-moon-stars-fill", clue: "Hábito digital saludable.", exp: "Dormir sin pantallas mejora tu ánimo al día siguiente." },
+        { lvl: 1, text: "Tu canción en flauta suena muy bonita.", category: "seguro", topic: "Música", icon: "bi-music-note-beamed", clue: "Elogio sincero y amable.", exp: "Reconocer el esfuerzo ajeno es una conducta segura." },
+        { lvl: 2, text: "¡Bienvenido al club de lectura del colegio!", category: "seguro", topic: "Bienvenida", icon: "bi-chat-heart-fill", clue: "Saludo cordial.", exp: "Recibir con respeto a los nuevos hace segura la comunidad." },
+        { lvl: 3, text: "Me gusta tu dibujo, aunque el cielo quedaría lindo azul.", category: "seguro", topic: "Opinión sana", icon: "bi-chat-dots-fill", clue: "Sugerencia amable sin burlas.", exp: "Dar una idea con respeto no es acoso, es una crítica sana." },
+        { lvl: 2, text: "A mí me gustan más los juegos de aventuras.", category: "seguro", topic: "Opinión", icon: "bi-controller", clue: "Gusto personal respetuoso.", exp: "Tener gustos diferentes está bien cuando hay respeto." },
+        { lvl: 1, text: "Hice galletas de avena con mi mamá hoy.", category: "seguro", topic: "Familia", icon: "bi-emoji-laughing-fill", clue: "Actividad cotidiana segura.", exp: "Contar actividades sanas sin dar datos privados es seguro." },
+        { lvl: 1, text: "Recuerda tomar agua mientras haces tareas.", category: "seguro", topic: "Salud", icon: "bi-cup-straw", clue: "Consejo saludable.", exp: "Cuidar nuestro cuerpo mientras usamos dispositivos es clave." },
+        { lvl: 2, text: "Qué buena idea tuviste para la cartelera.", category: "seguro", topic: "Colegio", icon: "bi-lightbulb-fill", clue: "Reconocimiento positivo.", exp: "Valorar las ideas de otros construye respeto." },
+        { lvl: 2, text: "Tu video está divertido, ¡sigue creando!", category: "seguro", topic: "Apoyo", icon: "bi-camera-reels-fill", clue: "Ánimo positivo.", exp: "El apoyo amable motiva sin hacer daño." },
+        { lvl: 1, text: "Hoy aprendí a armar un avión de papel gigante.", category: "seguro", topic: "Hobbies", icon: "bi-send-fill", clue: "Pasatiempo sano.", exp: "Compartir tus hobbies de forma segura inspira a otros." },
+        { lvl: 2, text: "Si no entiendes las reglas del juego, te ayudo.", category: "seguro", topic: "Ayuda", icon: "bi-info-circle-fill", clue: "Ofrecimiento amable.", exp: "Ayudar a los demás mantiene sana la comunidad." },
+        { lvl: 3, text: "No estoy de acuerdo, pero respeto tu idea.", category: "seguro", topic: "Respeto", icon: "bi-people-fill", clue: "Desacuerdo tranquilo y respetuoso.", exp: "Saber dialogar con respeto evita peleas en internet." },
+
+        { lvl: 1, text: "'Pásame tu contraseña y te regalo monedas.'", category: "detener", topic: "Privacidad", icon: "bi-key-fill", clue: "Nunca des tu contraseña a nadie.", exp: "Las contraseñas son secretas; nadie debe pedírtelas." },
+        { lvl: 1, text: "'¿Cuál es la dirección exacta de tu casa?'", category: "detener", topic: "Ubicación", icon: "bi-house-lock-fill", clue: "Pide tu dirección real.", exp: "Nunca publiques ni envíes tu dirección en internet." },
+        { lvl: 1, text: "'Mándame una foto tuya ahora en secreto.'", category: "detener", topic: "Alerta grave", icon: "bi-camera-fill", clue: "Pide fotos y guardar secreto.", exp: "Si alguien pide fotos o secretos, detente y avisa a tus papás." },
+        { lvl: 2, text: "'¿A qué colegio vas y a qué hora sales?'", category: "detener", topic: "Seguridad", icon: "bi-geo-alt-fill", clue: "Pregunta tus horarios y lugar.", exp: "Tus horarios y colegio son datos privados." },
+        { lvl: 1, text: "'Dame el número de tarjeta de tu mamá.'", category: "detener", topic: "Engaño", icon: "bi-credit-card-2-front-fill", clue: "Pide dinero o tarjetas familiares.", exp: "Nunca tomes ni envíes datos bancarios de tus padres." },
+        { lvl: 2, text: "'Este será nuestro secreto, no le digas a nadie.'", category: "detener", topic: "Alerta", icon: "bi-incognito", clue: "Los secretos incómodos son señal de alerta.", exp: "Cuéntale siempre a un adulto de confianza si alguien pide secretos." },
+        { lvl: 2, text: "Un desconocido insiste en hacer videollamada a solas.", category: "detener", topic: "Desconocidos", icon: "bi-camera-video-off-fill", clue: "Contacto privado con un extraño.", exp: "No aceptes videollamadas con personas que no conoces." },
+        { lvl: 2, text: "'Escribe tu nombre, teléfono y dirección aquí.'", category: "detener", topic: "Datos", icon: "bi-file-person-fill", clue: "Formulario pidiendo datos privados.", exp: "Protege tus datos personales; no llenes formularios extraños." },
+        { lvl: 3, text: "'¿Estás solo en casa ahora mismo?'", category: "detener", topic: "Seguridad", icon: "bi-shield-exclamation", clue: "Pregunta peligrosa sobre tu casa.", exp: "Nunca digas en chats si estás solo en casa." },
+        { lvl: 2, text: "'Envíame tu ubicación en tiempo real por chat.'", category: "detener", topic: "Ubicación", icon: "bi-pin-map-fill", clue: "Rastreo de tu ubicación.", exp: "Tu ubicación en tiempo real solo es para tu familia." },
+
+        { lvl: 1, text: "'Nadie te quiere aquí, eres el peor del grupo.'", category: "detener", topic: "Bullying", icon: "bi-emoji-angry-fill", clue: "Insulto y exclusión directa.", exp: "El bullying lastima; detén el mensaje y pide ayuda." },
+        { lvl: 2, text: "Suben una foto editada para burlarse de un niño.", category: "detener", topic: "Ciberacoso", icon: "bi-image-alt", clue: "Burlas con fotos de otros.", exp: "Humillar a alguien con fotos editadas es ciberacoso." },
+        { lvl: 2, text: "'Si no haces caso, contamos tus secretos.'", category: "detener", topic: "Chantaje", icon: "bi-exclamation-octagon-fill", clue: "Amenaza e intimidación.", exp: "Ante cualquier amenaza o chantaje, avisa a un adulto." },
+        { lvl: 1, text: "'Cállate, qué tonto eres, nadie te pidió hablar.'", category: "detener", topic: "Agresión", icon: "bi-x-octagon-fill", clue: "Agresión verbal directa.", exp: "Todos merecemos respeto; frena los insultos." },
+        { lvl: 2, text: "Crean un chat solo para poner apodos crueles.", category: "detener", topic: "Acoso grupal", icon: "bi-chat-left-dots-fill", clue: "Grupo hecho para burlarse.", exp: "Los chats de burlas son acoso; no participes y avisa." },
+        { lvl: 1, text: "'Borra tu cuenta, das pena con lo que subes.'", category: "detener", topic: "Hostigamiento", icon: "bi-trash-fill", clue: "Mensaje hiriente para humillar.", exp: "Nadie tiene derecho a humillarte en internet." },
+        { lvl: 3, text: "Inventan mentiras para que nadie hable con Ana.", category: "detener", topic: "Rumores", icon: "bi-megaphone", clue: "Rumores creados para hacer daño.", exp: "Esparcir mentiras para aislar a alguien es bullying." },
+        { lvl: 2, text: "'Jaja mira qué feo se ve en ese video.'", category: "detener", topic: "Burla", icon: "bi-hand-thumbs-down-fill", clue: "Burla sobre el aspecto físico.", exp: "Burlarse del cuerpo o rostro de otros es ciberacoso." },
+
+        { lvl: 1, text: "'¡Ganaste un celular! Entra y pon tu clave.'", category: "detener", topic: "Estafa", icon: "bi-gift-fill", clue: "Premio falso que roba cuentas.", exp: "Los premios sorpresa que piden claves son trampas." },
+        { lvl: 3, text: "'¡Compra esta caja ya o perderás tu cuenta!'", category: "detener", topic: "Presión de compra", icon: "bi-coin", clue: "Presión agresiva para gastar dinero.", exp: "Desconfía de juegos que te presionan o asustan para comprar." },
+        { lvl: 1, text: "'Descarga monedas infinitas gratis en este link.'", category: "detener", topic: "Virus / Robo", icon: "bi-bug-fill", clue: "Truco falso con virus.", exp: "Los enlaces de monedas infinitas roban tu cuenta." },
+        { lvl: 2, text: "'¡ALERTA! Tu tablet tiene 50 virus, haz clic.'", category: "detener", topic: "Falsa alarma", icon: "bi-exclamation-triangle-fill", clue: "Anuncio falso para asustarte.", exp: "Es publicidad engañosa; ciérrala y avisa a tus papás." },
+        { lvl: 2, text: "Un enlace raro dice solo: 'Abre esto rápido'.", category: "detener", topic: "Enlace dudoso", icon: "bi-link-45deg", clue: "Enlace misterioso sin explicación.", exp: "Nunca abras enlaces desconocidos." },
+        { lvl: 2, text: "Repiten 20 veces el mismo link de tienda rara.", category: "detener", topic: "Spam", icon: "bi-broadcast", clue: "Repetición masiva de enlaces.", exp: "El spam ensucia el chat y suele esconder estafas." },
+        { lvl: 3, text: "'Tu cuenta se borrará hoy si no respondes.'", category: "detener", topic: "Phishing", icon: "bi-envelope-exclamation-fill", clue: "Amenaza falsa para engañarte.", exp: "Los mensajes que meten miedo buscan robar tus datos." },
+
+        { lvl: 1, text: "'Haz este reto de aguantar la respiración.'", category: "detener", topic: "Reto peligroso", icon: "bi-lungs-fill", clue: "Pone en riesgo tu salud física.", exp: "Nunca hagas retos virales que puedan lastimarte." },
+        { lvl: 2, text: "'Si no compartes esto tendrás mala suerte.'", category: "detener", topic: "Cadena falsa", icon: "bi-repeat", clue: "Cadena viral que busca asustar.", exp: "Las cadenas de mala suerte son falsas; rómpelas." },
+        { lvl: 3, text: "'Mañana van a cerrar internet en todo el mundo.'", category: "detener", topic: "Noticia falsa", icon: "bi-globe-americas", clue: "Noticia alarmista inventada.", exp: "Desconfía de noticias exageradas sin fuentes reales." },
+        { lvl: 3, text: "'No pares de ver videos, dormir es aburrido.'", category: "detener", topic: "Uso excesivo", icon: "bi-hourglass-split", clue: "Impulsa a pasar horas sin descanso.", exp: "Tu descanso y jugar fuera de pantalla son muy importantes." },
+        { lvl: 3, text: "'Si no tienes mil likes no vales nada.'", category: "detener", topic: "Autoestima", icon: "bi-heartbreak-fill", clue: "Idea falsa sobre los 'me gusta'.", exp: "Tu valor como persona no se mide por likes." },
+        { lvl: 1, text: "Video con peleas y violencia explícita en el chat.", category: "detener", topic: "Violencia", icon: "bi-shield-slash-fill", clue: "Contenido violento no apto.", exp: "Si ves contenido violento o feo, ciérralo y avisa a un adulto." },
+        { lvl: 2, text: "'Toma esta mezcla rara para tener súper fuerza.'", category: "detener", topic: "Peligro", icon: "bi-bandaid-fill", clue: "Consejo peligroso para la salud.", exp: "Nunca pruebes recetas o retos peligrosos de internet." },
+        { lvl: 1, text: "Un extraño te pide reunirte en el parque solo.", category: "detener", topic: "Peligro real", icon: "bi-person-x-fill", clue: "Nunca te veas con desconocidos.", exp: "Jamás te reúnas en persona con alguien de internet." }
+      ];
+
+      const templates = [
+        {
+          lvl: 1,
+          a: ["¡Qué bien te quedó tu ", "Me encantó tu ", "Felicitaciones por tu "],
+          b: ["maqueta de planetas!", "dibujo de animales!", "cuento de aventuras!", "proyecto de ciencias!"],
+          category: "seguro", topic: "Amistad", icon: "bi-star-fill",
+          clue: "Mensaje positivo sobre una tarea.", exp: "Celebrar los logros de los demás es seguro y amable."
+        },
+        {
+          lvl: 2,
+          a: ["Un extraño pregunta: '", "Chat desconocido: '", "Mensaje privado: '"],
+          b: ["¿En qué barrio vives?'", "¿Cuál es tu clave?'", "¿Mándame una foto tuya?'", "¿A qué hora sales solo?'"],
+          category: "detener", topic: "Privacidad", icon: "bi-shield-lock-fill",
+          clue: "Pide información privada o fotos.", exp: "Nunca compartas datos personales, claves ni fotos con desconocidos."
+        },
+        {
+          lvl: 1,
+          a: ["Comentario cruel: '", "Mensaje ofensivo: '", "Burla en el chat: '"],
+          b: ["Nadie quiere jugar contigo.'", "Qué tonto eres, vete.'", "Todos se ríen de tu foto.'", "Eres el peor del salón.'"],
+          category: "detener", topic: "Bullying", icon: "bi-emoji-angry-fill",
+          clue: "Insulto o burla directa.", exp: "El bullying nunca está bien; detén el mensaje y pide ayuda."
+        },
+        {
+          lvl: 3,
+          a: ["Anuncio sospechoso: '", "Link extraño dice: '", "Mensaje viral: '"],
+          b: ["¡Regalamos 10,000 monedas aquí!'", "Pon tu clave y gana premios.'", "Comparte o borran tu cuenta.'", "Descarga este truco secreto.'"],
+          category: "detener", topic: "Estafa / Spam", icon: "bi-gift-fill",
+          clue: "Promesa falsa para engañarte.", exp: "Los regalos fáciles y enlaces raros suelen ser estafas."
+        }
+      ];
+
+      const full = [];
+      let uid = 1;
+      items.forEach(it => full.push({ id: uid++, ...it, special: null }));
+      templates.forEach(t => {
+        t.a.forEach(p1 => {
+          t.b.forEach(p2 => {
+            full.push({
+              id: uid++,
+              lvl: t.lvl,
+              text: p1 + p2,
+              category: t.category,
+              topic: t.topic,
+              icon: t.icon,
+              clue: t.clue,
+              exp: t.exp,
+              special: null
+            });
+          });
+        });
+      });
+
+      const specials = [
+        { type: "star",   label: "★ ESTRELLA", clue: "¡Bono de +150 puntos!" },
+        { type: "pause",  label: "⏸ CALMA",    clue: "Frena la cinta 4 segundos" },
+        { type: "shield", label: "🛡 ESCUDO",   clue: "Te protege del próximo fallo" },
+        { type: "loupe",  label: "🔍 PISTA",    clue: "Muestra la pista siguiente" }
+      ];
+
+      const tutorial = [
+        { id: 901, lvl: 1, text: "Ejemplo 1/2: '¡Qué lindo dibujo hiciste hoy, amigo!'", category: "seguro", topic: "Práctica", icon: "bi-palette-fill", clue: "Es amable y respetuoso. ¡Llévalo a SEGURO (A)!", exp: "¡Genial! Los mensajes amables van en SEGURO." },
+        { id: 902, lvl: 1, text: "Ejemplo 2/2: 'Dame tu contraseña para regalarte monedas.'", category: "detener", topic: "Práctica", icon: "bi-key-fill", clue: "Pide tu contraseña secreta. ¡Llévalo a DETENER (D)!", exp: "¡Exacto! Nunca entregues contraseñas a nadie." }
+      ];
+
+      return {
+        getAll: () => full,
+        getTutorial: () => tutorial.map(x => ({ ...x })),
+        getSpecials: () => specials
+      };
+    })();
+
+    const SoundFX = (() => {
+      let ctx = null;
+      let on = true;
+      function tone(f1, f2, dur, type = 'sine', vol = 0.16) {
+        if (!on) return;
+        if (!ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) ctx = new AC();
+        }
+        if (!ctx) return;
+        if (ctx.state === 'suspended') ctx.resume();
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(f1, t);
+        if (f2) osc.frequency.exponentialRampToValueAtTime(f2, t + dur);
+        g.gain.setValueAtTime(vol, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        osc.connect(g);
+        g.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + dur);
+      }
+      return {
+        toggle: () => (on = !on),
+        hit: (s) => tone(Math.min(920, 500 + s * 30), 960, 0.14, 'triangle', 0.18),
+        miss: () => tone(220, 120, 0.25, 'sawtooth', 0.12),
+        levelUp: () => {
+          tone(523, 659, 0.12, 'triangle', 0.18);
+          setTimeout(() => tone(659, 784, 0.12, 'triangle', 0.18), 90);
+          setTimeout(() => tone(784, 1046, 0.22, 'triangle', 0.2), 180);
+        },
+        power: () => { tone(420, 740, 0.14, 'triangle', 0.18); setTimeout(() => tone(620, 980, 0.16, 'sine', 0.16), 80); }
+      };
+    })();
+
+    const FX = (() => {
+      const canvas = document.getElementById('fx-canvas');
+      const ctx = canvas.getContext('2d');
+      let list = [];
+      function resize() {
+        const r = canvas.parentElement.getBoundingClientRect();
+        canvas.width = r.width;
+        canvas.height = r.height;
+      }
+      function burst(x, y, colors = ['#ffc107', '#2ecc71', '#ff758c', '#51e5ff'], count = 26) {
+        for (let i = 0; i < count; i++) {
+          const a = Math.random() * Math.PI * 2;
+          const sp = 80 + Math.random() * 190;
+          list.push({
+            x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 45,
+            r: 4 + Math.random() * 5, c: colors[i % colors.length],
+            star: i % 2 === 0, rot: Math.random() * Math.PI, life: 0.6 + Math.random() * 0.3
+          });
+        }
+      }
+      function drawStar(cx, cy, r, rot) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(rot);
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * r, -Math.sin((18 + i * 72) * Math.PI / 180) * r);
+          ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * (r * 0.45), -Math.sin((54 + i * 72) * Math.PI / 180) * (r * 0.45));
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+      function update(dt) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = list.length - 1; i >= 0; i--) {
+          const p = list[i];
+          p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt; p.rot += 5 * dt; p.life -= dt;
+          if (p.life <= 0) { list.splice(i, 1); continue; }
+          ctx.globalAlpha = Math.max(0, p.life * 1.4);
+          ctx.fillStyle = p.c;
+          if (p.star) { drawStar(p.x, p.y, p.r * 1.3, p.rot); }
+          else { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); }
+        }
+        ctx.globalAlpha = 1;
+      }
+      return { resize, burst, update };
+    })();
+
+    const Storage = (() => {
+      const KEY = 'backpack_filtro_kids_v3';
+      const def = { highScore: 0, bestStreak: 0, totalHits: 0, games: 0, badges: [] };
+      return {
+        load() {
+          try { return { ...def, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; }
+          catch { return { ...def }; }
+        },
+        save(d) {
+          try { localStorage.setItem(KEY, JSON.stringify(d)); } catch {}
+        }
+      };
+    })();
+
+    const Game = (() => {
+      let state = 'menu';
+      let tutorialMode = false;
+      let tutQueue = [];
+      let score = 0, streak = 0, bestStreak = 0, level = 1, health = CONFIG.initialHealth, energy = 0;
+      let totalPlayed = 0, totalHits = 0, mistakes = [];
+      let cards = [], selectedId = null, spawnTimer = 0, recentIds = [], lastCat = null, sameCatCount = 0;
+      let freezeTimer = 0, doublePtsTimer = 0, shieldOn = false, nextClueOn = false;
+      let cooldowns = { ian: 0, mia: 0, tiago: 0, lulu: 0, pan: 0 };
+      let raf = null, lastTime = 0;
+
+      const root = document.getElementById('bp-game-root');
+      const belt = document.getElementById('conveyor-area');
+      const saveData = Storage.load();
+
+      function init() {
+        FX.resize();
+        window.addEventListener('resize', FX.resize);
+        buildUI();
+        bindEvents();
+        refreshHUD();
+      }
+
+      function buildUI() {
+        const menuCast = document.getElementById('menu-cast');
+        const bar = document.getElementById('guardians-bar');
+        menuCast.innerHTML = ''; bar.innerHTML = '';
+
+        CONFIG.characters.forEach(ch => {
+          menuCast.innerHTML += `
+            <div class="cast-chip">
+              <div class="cast-chip-avatar" style="background:${ch.color};">
+                <img src="${ch.img}" alt="${ch.name}" onerror="this.style.display='none'; this.parentElement.textContent='${ch.name[0]}';">
+              </div>
+              <span class="cast-chip-name">${ch.name}</span>
+            </div>
+          `;
+          const btn = document.createElement('button');
+          btn.type = 'button'; btn.className = 'guardian-btn'; btn.id = `gbtn-${ch.id}`;
+          btn.innerHTML = `
+            <div class="guardian-avatar" style="background:${ch.color};">
+              <img src="${ch.img}" alt="${ch.name}" onerror="this.style.display='none'; this.parentElement.textContent='${ch.name[0]}';">
+            </div>
+            <div class="guardian-meta">
+              <span class="guardian-name">${ch.name}</span>
+              <span class="guardian-desc">[${ch.key}] ${ch.short}</span>
+            </div>
+          `;
+          btn.addEventListener('click', () => triggerPower(ch.id));
+          bar.appendChild(btn);
+        });
+      }
+
+      function bindEvents() {
+        document.getElementById('btn-play').addEventListener('click', () => start(false));
+        document.getElementById('btn-howto').addEventListener('click', () => setScreen('howto'));
+        document.getElementById('btn-tutorial').addEventListener('click', () => start(true));
+        document.getElementById('btn-skip-tut').addEventListener('click', () => start(false));
+
+        document.getElementById('btn-pause').addEventListener('click', () => {
+          if (state === 'playing') pause(); else if (state === 'paused') resume();
+        });
+        document.getElementById('btn-resume').addEventListener('click', resume);
+        document.getElementById('btn-restart').addEventListener('click', () => start(false));
+        document.getElementById('btn-home').addEventListener('click', () => { clearBelt(); setScreen('menu'); });
+
+        document.getElementById('btn-again').addEventListener('click', () => start(false));
+        document.getElementById('btn-learn').addEventListener('click', openLearning);
+        document.getElementById('btn-learn-play').addEventListener('click', () => start(false));
+        document.getElementById('btn-learn-back').addEventListener('click', () => setScreen('results'));
+        document.getElementById('btn-res-home').addEventListener('click', () => setScreen('menu'));
+
+        document.getElementById('btn-sound').addEventListener('click', () => {
+          const active = SoundFX.toggle();
+          document.getElementById('icon-sound').className = active ? 'bi bi-volume-up-fill' : 'bi bi-volume-mute-fill';
+        });
+
+        document.querySelectorAll('.drop-zone').forEach(z => {
+          z.addEventListener('click', () => {
+            if (state !== 'playing') return;
+            const target = cards.find(c => c.id === selectedId) || cards[0];
+            if (target) decide(target.id, z.dataset.cat);
+          });
+        });
+
+        window.addEventListener('keydown', e => {
+          const k = e.key.toLowerCase();
+          if (k === 'escape') {
+            if (state === 'playing') pause(); else if (state === 'paused') resume();
+            return;
+          }
+          if (state !== 'playing') return;
+          if (k === 'a' || k === 'arrowleft') {
+            const target = cards.find(c => c.id === selectedId) || cards[0];
+            if (target) decide(target.id, 'seguro');
+          } else if (k === 'd' || k === 'arrowright') {
+            const target = cards.find(c => c.id === selectedId) || cards[0];
+            if (target) decide(target.id, 'detener');
+          } else if (['1', '2', '3', '4', '5'].includes(k)) {
+            triggerPower(CONFIG.characters[parseInt(k, 10) - 1].id);
+          }
+        });
+      }
+
+      function setScreen(scr) {
+        state = scr;
+        ['menu', 'howto', 'pause', 'results', 'learning'].forEach(name => {
+          document.getElementById(`scr-${name}`).classList.toggle('hidden', scr !== name);
+        });
+      }
+
+      function clearBelt() {
+        if (raf) cancelAnimationFrame(raf);
+        raf = null;
+        cards.forEach(c => c.el.remove());
+        cards = [];
+        selectedId = null;
+        belt.classList.remove('frozen');
+      }
+
+      function start(isTut = false) {
+        clearBelt();
+        tutorialMode = isTut;
+        tutQueue = isTut ? CardDeck.getTutorial() : [];
+        score = 0; streak = 0; bestStreak = 0; level = 1; health = CONFIG.initialHealth; energy = 0;
+        totalPlayed = 0; totalHits = 0; mistakes = [];
+        freezeTimer = 0; doublePtsTimer = 0; shieldOn = false; nextClueOn = false;
+        spawnTimer = 0.2;
+
+        setStatusBar('¡Arrastra el mensaje o pulsa A (Seguro) / D (Detener)!', 'bi-shield-check', '#51e5ff');
+        setScreen('playing');
+        refreshHUD();
+        spawnCard();
+
+        lastTime = performance.now();
+        raf = requestAnimationFrame(loop);
+      }
+
+      function pause() {
+        setScreen('pause');
+        if (raf) cancelAnimationFrame(raf);
+        raf = null;
+      }
+
+      function resume() {
+        setScreen('playing');
+        lastTime = performance.now();
+        raf = requestAnimationFrame(loop);
+      }
+
+      function finishGame() {
+        setScreen('results');
+        if (raf) cancelAnimationFrame(raf);
+        raf = null;
+
+        saveData.games += 1;
+        saveData.totalHits += totalHits;
+        if (score > saveData.highScore) saveData.highScore = score;
+        if (bestStreak > saveData.bestStreak) saveData.bestStreak = bestStreak;
+
+        const badgeBox = document.getElementById('res-badges');
+        badgeBox.innerHTML = '';
+        const rules = [
+          { id: 'b1', name: 'Guardián Novato', ok: saveData.games >= 1 },
+          { id: 'b2', name: 'Racha Brillante (10)', ok: saveData.bestStreak >= 10 },
+          { id: 'b3', name: 'Experto Digital (40)', ok: saveData.totalHits >= 40 },
+          { id: 'b4', name: 'Súper Escudo (2,500 pts)', ok: saveData.highScore >= 2500 }
+        ];
+        rules.forEach(r => {
+          if (r.ok && !saveData.badges.includes(r.id)) saveData.badges.push(r.id);
+          if (saveData.badges.includes(r.id)) {
+            badgeBox.innerHTML += `<span class="badge-chip"><i class="bi bi-award-fill" style="color:#ffc107;"></i> ${r.name}</span>`;
+          }
+        });
+        Storage.save(saveData);
+
+        const acc = totalPlayed > 0 ? Math.round((totalHits / totalPlayed) * 100) : 100;
+        document.getElementById('res-score').textContent = score.toLocaleString();
+        document.getElementById('res-streak').textContent = bestStreak;
+        document.getElementById('res-acc').textContent = `${acc}%`;
+        document.getElementById('res-best').textContent = saveData.highScore.toLocaleString();
+      }
+
+      function openLearning() {
+        const list = document.getElementById('learning-list');
+        if (!mistakes.length) {
+          list.innerHTML = `<div style="text-align:center; padding:20px;"><i class="bi bi-emoji-sunglasses-fill" style="font-size:2.2rem; color:#ffc107;"></i><h4 style="font-family:var(--font-title); color:var(--bp-pink-dark); margin:6px 0;">¡Cero errores!</h4></div>`;
+        } else {
+          list.innerHTML = mistakes.map(m => `
+            <div class="learn-item">
+              <div style="font-size:0.86rem; font-weight:800; color:#222; margin-bottom:2px;">«${m.text}»</div>
+              <div style="font-size:0.78rem; font-weight:600; color:#555;">💡 ${m.exp}</div>
+            </div>
+          `).join('');
+        }
+        setScreen('learning');
+      }
+
+      function getProgression() {
+        const newLevel = Math.min(6, Math.floor(totalHits / 6) + 1);
+        if (newLevel > level && !tutorialMode) {
+          level = newLevel;
+          SoundFX.levelUp();
+          const r = root.getBoundingClientRect();
+          FX.burst(r.width / 2, r.height * 0.45, ['#ffc107', '#51e5ff', '#ff758c', '#2ecc71'], 40);
+          spawnCallout(r.width / 2, r.height * 0.42, `¡SUBISTE A NIVEL ${level}!`, '#0277bd');
+          flashScreen('rgba(81, 229, 255, 0.35)');
+        }
+        const speedPx = 78 + (level - 1) * 18;
+        const spawnSec = Math.max(1.5, 3.1 - (level - 1) * 0.32);
+        const maxOnBelt = level >= 3 ? 2 : 1;
+        const maxCardDifficulty = level === 1 ? 1 : (level <= 3 ? 2 : 3);
+        return { speedPx, spawnSec, maxOnBelt, maxCardDifficulty };
+      }
+
+      function loop(now) {
+        if (state !== 'playing') return;
+        const dt = Math.min(0.05, (now - lastTime) / 1000);
+        lastTime = now;
+
+        if (freezeTimer > 0) {
+          freezeTimer = Math.max(0, freezeTimer - dt);
+          belt.classList.add('frozen');
+        } else {
+          belt.classList.remove('frozen');
+        }
+
+        if (doublePtsTimer > 0) doublePtsTimer = Math.max(0, doublePtsTimer - dt);
+        Object.keys(cooldowns).forEach(k => { if (cooldowns[k] > 0) cooldowns[k] = Math.max(0, cooldowns[k] - dt); });
+
+        const prog = getProgression();
+
+        if (freezeTimer <= 0) {
+          spawnTimer -= dt;
+          const maxC = tutorialMode ? 1 : prog.maxOnBelt;
+          const canFit = cards.length === 0 || cards[cards.length - 1].x >= CONFIG.cardGapPx;
+          if (spawnTimer <= 0 && cards.length < maxC && canFit) {
+            spawnCard(prog.maxCardDifficulty);
+            spawnTimer = prog.spawnSec;
+          }
+        }
+
+        const beltW = belt.clientWidth;
+        const speed = freezeTimer > 0 ? 0 : prog.speedPx;
+
+        for (let i = cards.length - 1; i >= 0; i--) {
+          const c = cards[i];
+          if (c.dragging) continue;
+          c.x += speed * dt;
+          c.el.style.left = `${c.x}px`;
+          c.el.classList.toggle('near-end', c.x > beltW - 350);
+
+          if (c.x > beltW - 45) {
+            missedCard(c);
+          }
+        }
+
+        FX.update(dt);
+        refreshHUD();
+        raf = requestAnimationFrame(loop);
+      }
+
+      function pickCardData(maxLvl = 1) {
+        if (tutorialMode) return tutQueue.shift() || null;
+        const deck = CardDeck.getAll();
+        let pool = deck.filter(item => item.lvl <= maxLvl && !recentIds.includes(item.id));
+        if (!pool.length) pool = deck.filter(item => item.lvl <= maxLvl);
+
+        if (sameCatCount >= 2 && lastCat) {
+          const alt = pool.filter(item => item.category !== lastCat);
+          if (alt.length) pool = alt;
+        }
+
+        const chosen = { ...pool[Math.floor(Math.random() * pool.length)] };
+        if (Math.random() < 0.15) {
+          const sp = CardDeck.getSpecials();
+          chosen.special = sp[Math.floor(Math.random() * sp.length)];
+        }
+
+        recentIds.push(chosen.id);
+        if (recentIds.length > 22) recentIds.shift();
+        if (chosen.category === lastCat) sameCatCount++;
+        else { lastCat = chosen.category; sameCatCount = 1; }
+
+        return chosen;
+      }
+
+      function spawnCard(maxLvl = 1) {
+        const data = pickCardData(maxLvl);
+        if (!data) return;
+
+        const el = document.createElement('div');
+        el.className = 'msg-card';
+        if (nextClueOn || tutorialMode) {
+          el.classList.add('clue-on');
+          nextClueOn = false;
+        }
+
+        el.innerHTML = `
+          <div class="msg-card-top">
+            <span class="msg-topic">${data.topic}</span>
+            ${data.special ? `<span class="msg-special">${data.special.label}</span>` : ''}
+          </div>
+          <div class="msg-card-main">
+            <div class="msg-icon"><i class="bi ${data.icon}"></i></div>
+            <div class="msg-text">${data.text}</div>
+          </div>
+          <div class="msg-clue"><i class="bi bi-search"></i> ${data.clue}</div>
+        `;
+
+        const obj = { id: `${data.id}_${Date.now()}_${Math.random()}`, data, el, x: 16, dragging: false };
+        attachDrag(obj);
+        belt.appendChild(el);
+        cards.push(obj);
+        if (!selectedId) selectCard(obj.id);
+      }
+
+      function attachDrag(obj) {
+        const el = obj.el;
+        let sx = 0, sy = 0, ox = 0, oy = 0;
+
+        el.addEventListener('pointerdown', e => {
+          if (state !== 'playing') return;
+          e.preventDefault();
+          selectCard(obj.id);
+          obj.dragging = true;
+          el.classList.add('dragging');
+          el.setPointerCapture(e.pointerId);
+
+          const r = el.getBoundingClientRect();
+          const br = belt.getBoundingClientRect();
+          sx = e.clientX; sy = e.clientY;
+          ox = r.left - br.left; oy = r.top - br.top;
+          el.style.transform = 'none';
+          el.style.left = `${ox}px`; el.style.top = `${oy}px`;
+        });
+
+        el.addEventListener('pointermove', e => {
+          if (!obj.dragging) return;
+          const dx = e.clientX - sx; const dy = e.clientY - sy;
+          const rot = Math.max(-12, Math.min(12, dx * 0.05));
+          el.style.left = `${ox + dx}px`; el.style.top = `${oy + dy}px`;
+          el.style.transform = `rotate(${rot}deg) scale(1.04)`;
+
+          const rootMid = root.getBoundingClientRect().left + root.clientWidth / 2;
+          el.classList.toggle('tilt-safe', e.clientX < rootMid - 30);
+          el.classList.toggle('tilt-stop', e.clientX > rootMid + 30);
+        });
+
+        el.addEventListener('pointerup', e => {
+          if (!obj.dragging) return;
+          obj.dragging = false;
+          el.classList.remove('dragging', 'tilt-safe', 'tilt-stop');
+
+          let droppedCat = null;
+          document.querySelectorAll('.drop-zone').forEach(z => {
+            const zr = z.getBoundingClientRect();
+            if (e.clientX >= zr.left && e.clientX <= zr.right && e.clientY >= zr.top && e.clientY <= zr.bottom) {
+              droppedCat = z.dataset.cat;
+            }
+          });
+
+          if (droppedCat) {
+            decide(obj.id, droppedCat);
+          } else {
+            el.style.top = '48%'; el.style.transform = 'translateY(-54%)'; el.style.left = `${obj.x}px`;
+          }
+        });
+      }
+
+      function selectCard(id) {
+        selectedId = id;
+        cards.forEach(c => c.el.classList.toggle('selected', c.id === id));
+      }
+
+      function getMultiplier(s) {
+        if (s >= 10) return 3;
+        if (s >= 5) return 2;
+        if (s >= 3) return 1.5;
+        return 1;
+      }
+
+      function bounceZone(cat) {
+        const z = document.getElementById(`zone-${cat}`);
+        if (!z) return;
+        z.classList.remove('zone-hit');
+        void z.offsetWidth;
+        z.classList.add('zone-hit');
+      }
+
+      function flashScreen(color) {
+        const fl = document.getElementById('screen-flash');
+        fl.style.boxShadow = `inset 0 0 42px ${color}`;
+        fl.style.opacity = '1';
+        setTimeout(() => { fl.style.opacity = '0'; }, 240);
+      }
+
+      function triggerShake() {
+        root.classList.remove('shake');
+        void root.offsetWidth;
+        root.classList.add('shake');
+      }
+
+      function spawnCallout(x, y, text, color) {
+        const div = document.createElement('div');
+        div.className = 'floating-callout';
+        div.style.left = `${x}px`; div.style.top = `${y}px`; div.style.color = color;
+        div.textContent = text;
+        root.appendChild(div);
+        setTimeout(() => div.remove(), 950);
+      }
+
+      function decide(cardId, chosenCat) {
+        const idx = cards.findIndex(c => c.id === cardId);
+        if (idx === -1) return;
+
+        bounceZone(chosenCat);
+
+        const obj = cards[idx];
+        const d = obj.data;
+        const cr = obj.el.getBoundingClientRect();
+        const rr = root.getBoundingClientRect();
+        const cx = cr.left - rr.left + cr.width / 2;
+        const cy = cr.top - rr.top + cr.height / 2;
+
+        obj.el.remove();
+        cards.splice(idx, 1);
+        if (selectedId === cardId) {
+          selectedId = cards.length ? cards[0].id : null;
+          if (selectedId) selectCard(selectedId);
+        }
+
+        totalPlayed++;
+        const ok = chosenCat === d.category;
+
+        if (ok) {
+          totalHits++; streak++;
+          if (streak > bestStreak) bestStreak = streak;
+
+          let pts = Math.round(CONFIG.basePoints * getMultiplier(streak));
+          if (doublePtsTimer > 0) pts *= 2;
+          if (d.special) {
+            if (d.special.type === 'star') pts += 150;
+            if (d.special.type === 'pause') freezeTimer = 4;
+            if (d.special.type === 'shield') shieldOn = true;
+            if (d.special.type === 'loupe') nextClueOn = true;
+          }
+
+          score += pts;
+          energy = Math.min(100, energy + CONFIG.energyPerHit);
+          if (streak % 5 === 0) health = Math.min(100, health + 5);
+
+          SoundFX.hit(streak);
+          FX.burst(cx, cy, ['#2ecc71', '#ffc107', '#51e5ff', '#ffffff'], 28);
+          flashScreen('rgba(46, 204, 113, 0.45)');
+          spawnCallout(cx, cy, streak >= 3 ? `+${pts} ¡RACHA ×${getMultiplier(streak)}!` : `+${pts}`, '#219653');
+
+          const scoreEl = document.getElementById('hud-score');
+          scoreEl.classList.remove('bump');
+          void scoreEl.offsetWidth;
+          scoreEl.classList.add('bump');
+
+          setStatusBar(`¡Genial! +${pts} pts — ${d.exp}`, 'bi-check-circle-fill', '#2ecc71');
+        } else {
+          streak = 0;
+          SoundFX.miss();
+
+          if (shieldOn) {
+            shieldOn = false;
+            FX.burst(cx, cy, ['#00acc1', '#ffffff'], 18);
+            spawnCallout(cx, cy, '¡ESCUDO PROTEGIÓ!', '#00acc1');
+            setStatusBar(`¡Escudo usado! ${d.exp}`, 'bi-shield-fill-check', '#00acc1');
+          } else {
+            const penalty = d.category === 'detener' ? -14 : -8;
+            if (!tutorialMode) health = Math.max(0, health + penalty);
+            triggerShake();
+            flashScreen('rgba(255, 82, 113, 0.55)');
+            FX.burst(cx, cy, ['#ff5271', '#ffaa3b'], 18);
+            spawnCallout(cx, cy, `${penalty}% VIDA`, '#d63056');
+            setStatusBar(`¡Cuidado! ${d.exp}`, 'bi-exclamation-triangle-fill', '#ff5271');
+          }
+
+          mistakes.push({ text: d.text, topic: d.topic, expected: d.category, exp: d.exp });
+        }
+
+        refreshHUD();
+
+        if (tutorialMode) {
+          if (tutQueue.length > 0) {
+            setTimeout(() => spawnCard(1), 400);
+          } else {
+            setStatusBar('¡Práctica lista! Empieza la partida real.', 'bi-stars', '#ffc107');
+            setTimeout(() => start(false), 900);
+          }
+          return;
+        }
+
+        if (health <= 0) {
+          setTimeout(finishGame, 450);
+          return;
+        }
+
+        if (cards.length === 0) spawnTimer = 0.22;
+      }
+
+      function missedCard(obj) {
+        const idx = cards.findIndex(c => c.id === obj.id);
+        if (idx === -1) return;
+        const cr = obj.el.getBoundingClientRect();
+        const rr = root.getBoundingClientRect();
+
+        obj.el.remove();
+        cards.splice(idx, 1);
+        if (selectedId === obj.id) {
+          selectedId = cards.length ? cards[0].id : null;
+          if (selectedId) selectCard(selectedId);
+        }
+
+        if (tutorialMode) {
+          tutQueue.unshift(obj.data);
+          spawnCard(1);
+          return;
+        }
+
+        totalPlayed++; streak = 0;
+        SoundFX.miss();
+        triggerShake();
+        flashScreen('rgba(255, 170, 59, 0.55)');
+        spawnCallout(cr.left - rr.left + 80, cr.top - rr.top + 40, '-10% VIDA ¡SE ESCAPÓ!', '#d35400');
+
+        health = Math.max(0, health - 10);
+        setStatusBar('¡Se escapó un mensaje! Clasifícalo antes de que llegue al final.', 'bi-clock-history', '#ffaa3b');
+        mistakes.push({ text: obj.data.text, topic: obj.data.topic, expected: obj.data.category, exp: obj.data.exp });
+
+        refreshHUD();
+        if (health <= 0) setTimeout(finishGame, 450);
+      }
+
+      function triggerPower(id) {
+        if (state !== 'playing') return;
+        if (energy < 100) {
+          setStatusBar('Acierta 5 mensajes para llenar el PODER EQUIPO al 100%.', 'bi-lightning-charge-fill', '#ffaa3b');
+          return;
+        }
+        if (cooldowns[id] > 0) return;
+
+        energy = 0;
+        cooldowns[id] = 5;
+        SoundFX.power();
+        const r = root.getBoundingClientRect();
+        FX.burst(r.width / 2, r.height * 0.5, ['#ffc107', '#ff758c', '#51e5ff', '#2ecc71'], 35);
+        flashScreen('rgba(255, 193, 7, 0.45)');
+
+        if (id === 'ian') {
+          freezeTimer = 5;
+          spawnCallout(r.width / 2, r.height * 0.45, '¡CINTA CONGELADA 5s!', '#0288d1');
+          setStatusBar('¡Poder de Ian! Cinta detenida 5 segundos.', 'bi-snow', '#0288d1');
+        } else if (id === 'mia') {
+          doublePtsTimer = 10;
+          spawnCallout(r.width / 2, r.height * 0.45, '¡PUNTOS DOBLES ×2!', '#00acc1');
+          setStatusBar('¡Poder de Mia! Puntos dobles (×2) por 10s.', 'bi-stars', '#00acc1');
+        } else if (id === 'tiago') {
+          health = Math.min(100, health + 25);
+          spawnCallout(r.width / 2, r.height * 0.45, '+25% VIDA RECUPERADA', '#219653');
+          setStatusBar('¡Poder de Tiago! +25% de vida en la comunidad.', 'bi-heart-fill', '#2ecc71');
+        } else if (id === 'lulu') {
+          nextClueOn = true;
+          cards.forEach(c => c.el.classList.add('clue-on'));
+          spawnCallout(r.width / 2, r.height * 0.45, '¡PISTAS ACTIVADAS!', '#ec407a');
+          setStatusBar('¡Lupa de Lulu! Pistas activadas en pantalla.', 'bi-search', '#ec407a');
+        } else if (id === 'pan') {
+          cards.forEach(c => { if (c.data.category === 'detener') c.el.classList.add('clue-on'); });
+          spawnCallout(r.width / 2, r.height * 0.45, '¡ALERTAS DETECTADAS!', '#ffb300');
+          setStatusBar('¡Radar de Pan! Riesgos detectados.', 'bi-radar', '#ffb300');
+        }
+        refreshHUD();
+      }
+
+      function setStatusBar(msg, iconClass, borderColor) {
+        const bar = document.getElementById('status-feedback-bar');
+        const icon = document.getElementById('status-feedback-icon');
+        const txt = document.getElementById('status-feedback-text');
+        bar.style.borderColor = borderColor;
+        icon.className = `bi ${iconClass}`;
+        icon.style.color = borderColor;
+        txt.textContent = msg;
+        bar.classList.remove('pop');
+        void bar.offsetWidth;
+        bar.classList.add('pop');
+      }
+
+      function refreshHUD() {
+        document.getElementById('hud-score').textContent = score.toLocaleString();
+        document.getElementById('hud-level').textContent = tutorialMode ? 'Práctica' : `Nivel ${level}`;
+
+        const stEl = document.getElementById('hud-streak');
+        stEl.textContent = streak > 0 ? `Racha ${streak} • ×${getMultiplier(streak)}` : '×1';
+        stEl.classList.toggle('fire', streak >= 3);
+
+        const hTxt = document.getElementById('hud-health-txt');
+        const hb = document.getElementById('hud-health-bar');
+        const hRow = document.getElementById('life-hero-row');
+
+        hTxt.textContent = `${health}%`;
+        hb.style.width = `${health}%`;
+        hRow.classList.toggle('danger', health <= 30);
+
+        if (health > 55) {
+          hb.style.background = 'linear-gradient(90deg, #2ecc71 0%, #00d2d3 100%)';
+          hTxt.style.color = '#219653'; hTxt.style.borderColor = '#2ecc71'; hTxt.style.background = '#eafaf1';
+        } else if (health > 30) {
+          hb.style.background = 'linear-gradient(90deg, #ffc107 0%, #ff9f43 100%)';
+          hTxt.style.color = '#d35400'; hTxt.style.borderColor = '#ffc107'; hTxt.style.background = '#fff8e1';
+        } else {
+          hb.style.background = 'linear-gradient(90deg, #ff5271 0%, #d63031 100%)';
+          hTxt.style.color = '#d63031'; hTxt.style.borderColor = '#ff5271'; hTxt.style.background = '#ffeef1';
+        }
+
+        document.getElementById('hud-energy-txt').textContent = `${energy}%`;
+        document.getElementById('hud-energy-bar').style.width = `${energy}%`;
+        document.getElementById('energy-pill-box').classList.toggle('full', energy >= 100);
+
+        CONFIG.characters.forEach(ch => {
+          const btn = document.getElementById(`gbtn-${ch.id}`);
+          if (btn) btn.classList.toggle('ready', energy >= 100 && cooldowns[ch.id] <= 0);
+        });
+      }
+
+      return { init };
+    })();
+
+    window.addEventListener('DOMContentLoaded', Game.init);
+  </script>
+</body>
+</html>

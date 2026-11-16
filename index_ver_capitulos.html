@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animaciones - Backpack</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Galindo&family=Geologica:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="custom-header">
+    <div class="container">
+      <nav class="navbar navbar-expand-lg navbar-pill">
+        <div class="container-fluid align-items-center px-2">
+          
+          <a class="navbar-brand me-0 me-lg-4 d-flex align-items-center" href="Inicio.html">
+            <img src="imagenes/logo final 1.png" alt="Logo Mochila" class="header-logo">
+          </a>
+
+          <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse align-items-center" id="navbarContent">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-2 gap-lg-4 text-center align-items-center">
+              <li class="nav-item">
+                <a class="nav-link nav-custom-link" href="Inicio.html">Inicio</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link nav-custom-link nav-active-yellow" href="Animaciones.html">Animaciones</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link nav-custom-link" href="index_juego.html">Juego</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link nav-custom-link" href="Merch.html">Merch</a>
+              </li>
+            </ul>
+
+            <div class="d-flex justify-content-center justify-content-lg-end align-items-center mt-2 mt-lg-0">
+              <button class="btn btn-login" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">
+              Iniciar sesión
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <nav class="breadcrumb-container px-4 py-2">
+    <div class="container">
+      <span class="breadcrumb-item-custom"><a href="Animaciones.html" class="text-white text-decoration-none">Animaciones</a></span>
+      <span class="breadcrumb-separator">•</span>
+      <span class="breadcrumb-item-custom active">E1- Patio de juegos</span>
+    </div>
+  </nav>
+
+  <main class="container my-4">
+    <h1 class="game-section-title mb-4">Reflejos - BACKPACK Cap 1</h1>
+
+    <div class="row g-4">
+      <div class="col-12 col-lg-8">
+        <div class="main-video-wrapper mb-3">
+          <img src="imagenes/miniatura.png" alt="E1- Patio de juegos" class="main-video-poster">
+          <button class="play-overlay-btn" aria-label="Reproducir video">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="d-flex gap-3 mb-4">
+          <a href="Animaciones.html" class="btn btn-nav-capsule rounded-pill px-4 py-2 text-decoration-none text-center">Anterior</a>
+          <a href="index_ver_capitulos.html" class="btn btn-nav-capsule rounded-pill px-4 py-2 text-decoration-none text-center">Siguiente</a>
+        </div>
+
+        <p class="info-description">
+          Ian tropieza con una maleta cuando se le rompe su celular,
+          mientras que Mia y Lulu no dejan de compararse en redes socioales,
+          pero no sabran la sorpresa que las espera.
+        </p>
+      </div>
+
+      <div class="col-12 col-lg-4">
+        <aside class="episodes-sidebar-card p-3 p-md-4">
+          <div class="mb-3">
+            <span class="sidebar-status-title d-block">Estás viendo</span>
+            <small class="sidebar-status-subtitle text-white-50">E1-Titulo del episodio</small>
+          </div>
+
+          <div class="d-flex flex-column gap-3">
+            <div class="sidebar-episode-item">
+              <span class="sidebar-episode-title d-block mb-1">E2- Título del episodio</span>
+              <div class="sidebar-thumbnail-wrapper">
+                <img src="imagenes/miniatura.png" alt="E2- Título del episodio" class="sidebar-thumbnail">
+              </div>
+            </div>
+
+            <div class="sidebar-episode-item">
+              <span class="sidebar-episode-title d-block mb-1">E3- Título del episodio</span>
+              <div class="sidebar-thumbnail-wrapper">
+                <img src="imagenes/miniatura.png" alt="E3- Título del episodio" class="sidebar-thumbnail">
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <section class="rating-section my-4">
+      <h3 class="rating-title mb-2">Calificación</h3>
+
+      <div class="d-flex align-items-center flex-wrap gap-3">
+        <div class="star-rating-css">
+          <input type="radio" id="star5" name="rating" value="5">
+          <label for="star5" title="5 estrellas">
+            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 1.5l2.8 6.5 7.2.6-5.4 4.8 1.6 7.1-6.2-3.6-6.2 3.6 1.6-7.1-5.4-4.8 7.2-.6z"/></svg>
+          </label>
+          <input type="radio" id="star4" name="rating" value="4">
+          <label for="star4" title="4 estrellas">
+            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 1.5l2.8 6.5 7.2.6-5.4 4.8 1.6 7.1-6.2-3.6-6.2 3.6 1.6-7.1-5.4-4.8 7.2-.6z"/></svg>
+          </label>
+          <input type="radio" id="star3" name="rating" value="3">
+          <label for="star3" title="3 estrellas">
+            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 1.5l2.8 6.5 7.2.6-5.4 4.8 1.6 7.1-6.2-3.6-6.2 3.6 1.6-7.1-5.4-4.8 7.2-.6z"/></svg>
+          </label>
+          <input type="radio" id="star2" name="rating" value="2">
+          <label for="star2" title="2 estrellas">
+            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 1.5l2.8 6.5 7.2.6-5.4 4.8 1.6 7.1-6.2-3.6-6.2 3.6 1.6-7.1-5.4-4.8 7.2-.6z"/></svg>
+          </label>
+          <input type="radio" id="star1" name="rating" value="1">
+          <label for="star1" title="1 estrella">
+            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 1.5l2.8 6.5 7.2.6-5.4 4.8 1.6 7.1-6.2-3.6-6.2 3.6 1.6-7.1-5.4-4.8 7.2-.6z"/></svg>
+          </label>
+        </div>
+
+        <div class="d-flex flex-column ms-2">
+          <span class="rating-value">4.8</span>
+          <span class="rating-count">12.345 Votos</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="comments-section mt-5">
+      <h2 class="comments-title mb-3">COMENTA</h2>
+      <div class="mb-4">
+        <textarea class="form-control comment-input" rows="4" placeholder="Califícanos"></textarea>
+      </div>
+      <div class="d-flex flex-column gap-3">
+        <div class="comment-card d-flex align-items-center p-3 p-md-4">
+          <img src="imagenes/perfil.png" alt="Perfil" class="comment-avatar me-3 me-md-4">
+          <div>
+            <h5 class="comment-username mb-1">User_Name</h5>
+            <p class="comment-text mb-0">Súper chévere el juego, me identifico mucho con Leja</p>
+          </div>
+        </div>
+        <div class="comment-card d-flex align-items-center p-3 p-md-4">
+          <img src="imagenes/perfil.png" alt="Perfil" class="comment-avatar me-3 me-md-4">
+          <div>
+            <h5 class="comment-username mb-1">User_Name</h5>
+            <p class="comment-text mb-0">¿Cómo hago para poder cambiarle la ropa a mi personaje? Tengo a bry</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="custom-footer w-100 py-5 text-center">
+    <div class="container d-flex flex-column align-items-center">
+      <ul class="list-inline mb-4 footer-links d-flex flex-wrap justify-content-center gap-3 gap-md-4">
+        <li class="list-inline-item"><a href="#" class="footer-link">Términos y condiciones</a></li>
+        <li class="list-inline-item"><a href="#" class="footer-link">Política de privacidad</a></li>
+        <li class="list-inline-item"><a href="#" class="footer-link">Subtitulado</a></li>
+        <li class="list-inline-item"><a href="#" class="footer-link">Cumplimiento de derechos de autor</a></li>
+      </ul>
+      <div class="footer-logo-wrapper mb-4">
+        <img src="imagenes/logo final 1.png" alt="Backpack Logo" class="footer-logo">
+      </div>
+      <div class="d-flex justify-content-center gap-3 mb-4">
+        <a href="#" class="social-icon-btn d-flex align-items-center justify-content-center" aria-label="YouTube"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+        <a href="#" class="social-icon-btn d-flex align-items-center justify-content-center" aria-label="Instagram"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+        <a href="#" class="social-icon-btn d-flex align-items-center justify-content-center" aria-label="TikTok"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525 0h3.08c.12 1.052.7 2.055 1.637 2.673 1.026.68 2.261.93 3.478.932v3.295c-1.35-.04-2.69-.427-3.83-1.125-.13-.08-.258-.166-.381-.258v7.625c0 3.328-2.67 6.028-5.968 6.028-3.297 0-5.968-2.7-5.968-6.028 0-3.327 2.671-6.027 5.968-6.027.382 0 .759.036 1.125.105v3.315c-.366-.115-.75-.175-1.125-.175-1.5 0-2.715 1.215-2.715 2.715 0 1.5 1.215 2.715 2.715 2.715 1.5 0 2.715-1.215 2.715-2.715V0z"/></svg></a>
+      </div>
+      <p class="copyright-text mb-0">
+        © 2026 Viacom International Inc. Backpack and all related titles, logos and characters are trademarks of Backpack inc. All Rights Reserved
+      </p>
+    </div>
+  </footer>
+
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered login-modal-dialog">
+      <div class="modal-content login-modal-content-custom overflow-hidden">
+        <div class="login-pink-box d-flex align-items-center justify-content-center position-relative overflow-hidden">
+          <div class="login-white-card bg-white position-relative">
+            <button type="button" class="btn-back-link border-0 bg-transparent p-0 mb-1" data-bs-dismiss="modal">
+              Atras
+            </button>
+            <div class="row align-items-center g-2">
+              <div class="col-12 col-sm-5 text-center">
+                <div class="login-avatar-circle mx-auto mb-1">
+                  <img src="imagenes/perfil.png" alt="Perfil Avatar" class="login-avatar-img">
+                </div>
+                <h2 class="login-card-title mb-0">INICIAR SESIÓN</h2>
+              </div>
+              <div class="col-12 col-sm-7">
+                <form>
+                  <div class="mb-2">
+                    <label for="loginEmail" class="form-label login-label ms-1">Email</label>
+                    <input type="email" class="form-control custom-login-input" id="loginEmail" placeholder="escribe aqui...">
+                  </div>
+                  <div class="mb-1 position-relative">
+                    <label for="loginPassword" class="form-label login-label ms-1">Contraseña</label>
+                    <div class="position-relative">
+                      <input type="password" class="form-control custom-login-input pe-4" id="loginPassword" placeholder="escribe aqui...">
+                      <button type="button" class="btn-toggle-eye position-absolute top-50 end-0 translate-middle-y me-2 border-0 bg-transparent p-0">
+                        <svg width="14" height="14" fill="#555" viewBox="0 0 16 16">
+                          <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+                          <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <div class="text-center mt-3">
+              <button type="button" class="btn btn-orange-submit px-4 py-1 mb-2">ENTRAR</button>
+              <div class="d-flex flex-column gap-1">
+                <a href="#" class="login-secondary-link">REGISTRARSE</a>
+                <a href="#" class="login-secondary-link">OLVIDÓ LA CONTRASEÑA</a>
+              </div>
+            </div>
+          </div>
+          <img src="imagenes/lulu 2.png" alt="Personaje Pelirroja" class="char-overlay char-bottom-left">
+          <img src="imagenes/pan 2.png" alt="Personaje Rubia" class="char-overlay char-bottom-right">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let lastScrollTop = 0;
+    const header = document.querySelector('.custom-header');
+    const scrollThreshold = 10;
+    window.addEventListener('scroll', () => {
+      let currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+      if (Math.abs(lastScrollTop - currentScroll) <= scrollThreshold) return;
+      if (currentScroll > lastScrollTop && currentScroll > 80) {
+        header.classList.add('hide-header');
+      } else if (currentScroll < lastScrollTop) {
+        header.classList.remove('hide-header');
+      }
+      lastScrollTop = currentScroll;
+    });
+  </script>
+</body>
+</html>
